@@ -33,23 +33,15 @@ services:
       - API_PORT=8000
       - HOST=0.0.0.0
       - DATABASE_URL=mysql+pymysql://user:user@mysql:3306/chat-box
+      - DB_HOST=mysql
+      - DB_USER=user
+      - DB_PASSWORD=user
+      - DB_NAME=chat-box
     depends_on:
       mysql:
         condition: service_healthy
     volumes:
       - ./server:/app
-    command:
-      [
-        "uv",
-        "run",
-        "uvicorn",
-        "main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
 
 volumes:
   mysql_data:

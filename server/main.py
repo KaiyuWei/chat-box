@@ -1,5 +1,10 @@
+import logging
+
 from config import settings
+from database import test_connection
 from routers import auth
+
+# TODO: Add logging in production env.
 
 try:
     import uvicorn
@@ -15,15 +20,20 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
+@app.on_event("startup")
+async def startup_event():
+    """Test database connection on startup"""
+
+    if not test_connection():
+        print("Failed to connect to database. Exiting...")
+        exit(1)
+
+    print("Database connection successful")
+
+
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth.router)
-
-
-# for health check
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
-
 
 app.include_router(api_router)
 

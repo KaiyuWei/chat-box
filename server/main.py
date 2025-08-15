@@ -4,14 +4,16 @@ from config import settings
 from database import test_connection
 from routers import auth
 
-# TODO: Add logging in production env.
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 try:
     import uvicorn
     from fastapi import APIRouter, FastAPI
 except ImportError:
-    print("Error: Required packages not installed. Please install fastapi and uvicorn:")
-    print("pip install fastapi uvicorn")
+    logger.error("Error: Required packages not installed.")
     exit(1)
 
 app = FastAPI(
@@ -26,10 +28,10 @@ async def startup_event():
     """Test database connection on startup"""
 
     if not test_connection():
-        print("Failed to connect to database. Exiting...")
+        logger.error("Failed to connect to database. Exiting...")
         exit(1)
 
-    print("Database connection successful")
+    logger.info("Database connection successful")
 
 
 api_router = APIRouter(prefix="/api")
@@ -38,7 +40,7 @@ api_router.include_router(auth.router)
 app.include_router(api_router)
 
 if __name__ == "__main__":
-    print(f"Server listening on port {settings.API_PORT}")
+    logger.info(f"Server listening on port {settings.API_PORT}")
 
     uvicorn.run(
         "main:app",

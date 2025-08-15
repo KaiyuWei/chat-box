@@ -18,6 +18,13 @@ app = FastAPI(
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth.router)
 
+
+# for health check
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+
 app.include_router(api_router)
 
 if __name__ == "__main__":

@@ -1,0 +1,2 @@
+GRANT ALL PRIVILEGES ON `chat-box`.* TO 'user'@'%';
+FLUSH PRIVILEGES;

@@ -9,4 +9,14 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "python-dotenv>=1.0.0",
     "dotenv>=0.9.9",
+    "sqlalchemy>=2.0.43",
+    "alembic>=1.14.1",
+    "pydantic>=2.10.6",
+]
+
+[dependency-groups]
+dev = [
+    "black>=24.8.0",
+    "flake8>=5.0.4",
+    "isort>=5.13.2",
 ]

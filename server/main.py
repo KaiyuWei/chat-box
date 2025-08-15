@@ -1,32 +1,32 @@
 from config import settings
+from routers import auth
 
 try:
-    from fastapi import FastAPI
     import uvicorn
+    from fastapi import APIRouter, FastAPI
 except ImportError:
     print("Error: Required packages not installed. Please install fastapi and uvicorn:")
     print("pip install fastapi uvicorn")
     exit(1)
 
-# Create FastAPI app
 app = FastAPI(
     title="Chat Application API",
     description="A simple chat application backend",
     version="1.0.0",
 )
 
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {"message": "Chat Application API is running", "status": "healthy"}
+api_router = APIRouter(prefix="/api")
+api_router.include_router(auth.router)
+
+app.include_router(api_router)
 
 if __name__ == "__main__":
     print(f"Server listening on port {settings.API_PORT}")
-    
+
     uvicorn.run(
         "main:app",
         host=settings.HOST,
         port=settings.API_PORT,
         reload=False,
-        log_level="info"
+        log_level="info",
     )

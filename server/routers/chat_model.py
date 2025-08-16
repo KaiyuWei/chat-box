@@ -29,35 +29,43 @@ async def chat_with_model(
         raise HTTPException(
             status_code=500, detail="Model not loaded. Please try again later"
         )
+
     try:
         # Dummy value for now
         conversation = [
             {
                 "role": "system",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "You are Qwen, a virtual human developed by the Qwen Team, Alibaba Group, capable of perceiving auditory and visual inputs, as well as generating text and speech.",
-                    }
-                ],
+                "content": "You are Qwen, a virtual human developed by the Qwen Team, Alibaba Group, capable of perceiving auditory and visual inputs, as well as generating text and speech.",
             },
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "tell a joke",
-                    },
-                ],
+                "content": "tell a joke",
             },
         ]
+
         text = tokenizer.apply_chat_template(
-            conversation, add_generation_prompt=True, tokenize=False
+            conversation,
+            add_generation_prompt=True,
+            tokenize=False,
+            enable_thinking=True,
         )
         inputs = tokenizer([text], return_tensors="pt").to(model.device)
         text_ids = model.generate(**inputs, max_new_tokens=32768)
-        generated_text = processor.decode(text_ids[0], skip_special_tokens=True)
-        return ChatResponse(messages=generated_text)
+
+        output_ids = text_ids[0][len(inputs.input_ids[0]) :].tolist()
+        try:
+            index = len(output_ids) - output_ids[::-1].index(151668)
+        except ValueError:
+            index = 0
+
+        content = tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip(
+            "\n"
+        )
+
+        return ChatResponse(messages=content)
+
     except Exception as e:
         logger.error(f"Error loading model: {e}")
-        return ChatResponse(messages="Something went wrong, try again later")
+        raise HTTPException(
+            status_code=500, detail="Something went wrong, try again later"
+        )

@@ -3,9 +3,8 @@ import logging
 from database import get_mysql_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from models import User
-from sqlalchemy.orm import Session
-
 from schemas import UserCreate, UserResponse
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["user"])

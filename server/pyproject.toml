@@ -17,6 +17,7 @@ dependencies = [
     "bcrypt>=4.0.0",
     "transformers>=4.46.3",
     "accelerate>=1.10.0",
+    "torch>=2.8.0",
 ]
 
 [dependency-groups]
@@ -29,4 +30,4 @@ dev = [
 ]
 
 [tool.uv.sources]
-transformers = { git = "https://github.com/huggingface/transformers", rev = "v4.51.3-Qwen2.5-Omni-preview" }
+transformers = { git = "https://github.com/huggingface/transformers", rev = "main" }

@@ -332,6 +332,7 @@ dependencies = [
     { name = "pymysql" },
     { name = "python-dotenv" },
     { name = "sqlalchemy" },
+    { name = "torch" },
     { name = "transformers" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -357,7 +358,8 @@ requires-dist = [
     { name = "pymysql", specifier = ">=1.1.1" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "sqlalchemy", specifier = ">=2.0.43" },
-    { name = "transformers", git = "https://github.com/huggingface/transformers?rev=v4.51.3-Qwen2.5-Omni-preview" },
+    { name = "torch", specifier = ">=2.8.0" },
+    { name = "transformers", git = "https://github.com/huggingface/transformers?rev=main" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0" },
 ]
 
@@ -1890,8 +1892,8 @@ wheels = [
 
 [[package]]
 name = "transformers"
-version = "4.52.0.dev0"
-source = { git = "https://github.com/huggingface/transformers?rev=v4.51.3-Qwen2.5-Omni-preview#cb39f7dd5ba874ee1859b47283b08cd3a6ab5a0d" }
+version = "4.56.0.dev0"
+source = { git = "https://github.com/huggingface/transformers?rev=main#cd22550692cabffb037b7e5a956e8da3cbbb2b67" }
 dependencies = [
     { name = "filelock" },
     { name = "huggingface-hub" },

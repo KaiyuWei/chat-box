@@ -1,8 +1,9 @@
 import logging
 
+from chat_model_loader import load_model_and_processor
 from config import settings
 from database import test_connection
-from routers import user_router
+from routers import chat_model_router, user_router
 
 # config logging
 logging.basicConfig(
@@ -28,7 +29,7 @@ app = FastAPI(
 # check database connection
 @app.on_event("startup")
 async def startup_event():
-    """Test database connection on startup"""
+    """Test database connection and load model on startup"""
 
     if not test_connection():
         logger.error("Failed to connect to database. Exiting...")
@@ -36,10 +37,15 @@ async def startup_event():
 
     logger.info("Database connection successful")
 
+    logger.info("Loading chat model...")
+    load_model_and_processor()
+    logger.info("Chat model and processor loaded successfully")
+
 
 # configure API router
 api_router = APIRouter(prefix="/api")
 api_router.include_router(user_router)
+api_router.include_router(chat_model_router)
 
 app.include_router(api_router)
 

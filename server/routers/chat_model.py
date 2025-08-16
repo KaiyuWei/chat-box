@@ -1,13 +1,16 @@
 import logging
 
+import chat_model_loader
 from database import get_mysql_db
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from schemas import ChatRequest, ChatResponse
 from sqlalchemy.orm import Session
-from transformers import Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniProcessor
+from transformers.models.qwen2_5_omni import (
+    Qwen2_5OmniForConditionalGeneration,
+    Qwen2_5OmniProcessor,
+)
 
 MODEL_NAME = "Qwen/Qwen2.5-Omni-3B"
-
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat_model"])
 
@@ -18,13 +21,15 @@ async def chat_with_model(
 ):
     """Get a user input message and reply"""
 
-    try:
-        model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
-            MODEL_NAME, torch_dtype="auto", device_map="auto"
+    model = chat_model_loader.model
+    tokenizer = chat_model_loader.tokenizer
+
+    if model is None or tokenizer is None:
+        logger.error("Model or tokenizer not loaded.")
+        raise HTTPException(
+            status_code=500, detail="Model not loaded. Please try again later"
         )
-
-        processor = Qwen2_5OmniProcessor.from_pretrained(MODEL_NAME)
-
+    try:
         # Dummy value for now
         conversation = [
             {
@@ -46,14 +51,13 @@ async def chat_with_model(
                 ],
             },
         ]
-
-        text = processor.apply_chat_template(
+        text = tokenizer.apply_chat_template(
             conversation, add_generation_prompt=True, tokenize=False
         )
-        inputs = processor(text=text, return_tensors="pt", padding=True)
-        inputs = inputs.to(model.device).to(model.dtype)
-        text_ids, audio = model.generate(**inputs)
-
+        inputs = tokenizer([text], return_tensors="pt").to(model.device)
+        text_ids = model.generate(**inputs, max_new_tokens=32768)
+        generated_text = processor.decode(text_ids[0], skip_special_tokens=True)
+        return ChatResponse(messages=generated_text)
     except Exception as e:
         logger.error(f"Error loading model: {e}")
         return ChatResponse(messages="Something went wrong, try again later")

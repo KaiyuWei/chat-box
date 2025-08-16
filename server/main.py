@@ -2,7 +2,7 @@ import logging
 
 from config import settings
 from database import test_connection
-from routers import auth
+from routers import user_router
 
 # config logging
 logging.basicConfig(
@@ -39,7 +39,7 @@ async def startup_event():
 
 # configure API router
 api_router = APIRouter(prefix="/api")
-api_router.include_router(auth.router)
+api_router.include_router(user_router)
 
 app.include_router(api_router)
 

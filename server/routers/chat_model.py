@@ -5,10 +5,6 @@ from database import get_mysql_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from schemas import ChatRequest, ChatResponse
 from sqlalchemy.orm import Session
-from transformers.models.qwen2_5_omni import (
-    Qwen2_5OmniForConditionalGeneration,
-    Qwen2_5OmniProcessor,
-)
 
 MODEL_NAME = "Qwen/Qwen2.5-Omni-3B"
 logger = logging.getLogger(__name__)
@@ -31,17 +27,8 @@ async def chat_with_model(
         )
 
     try:
-        # Dummy value for now
-        conversation = [
-            {
-                "role": "system",
-                "content": "You are Qwen, a virtual human developed by the Qwen Team, Alibaba Group, capable of perceiving auditory and visual inputs, as well as generating text and speech.",
-            },
-            {
-                "role": "user",
-                "content": "tell a joke",
-            },
-        ]
+        # TODO: append history messages to the conversation list.
+        conversation = chat_request.messages
 
         text = tokenizer.apply_chat_template(
             conversation,

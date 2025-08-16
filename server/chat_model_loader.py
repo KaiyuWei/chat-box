@@ -19,7 +19,3 @@ def load_model_and_processor():
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME, torch_dtype="auto", device_map="auto"
     )
-
-    if model is None or tokenizer is None:
-        logger.error(">>>>>> Model or tokenizer not loaded.")
-        return

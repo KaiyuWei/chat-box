@@ -4,11 +4,13 @@ from config import settings
 from database import test_connection
 from routers import auth
 
+# config logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
+# import required packages
 try:
     import uvicorn
     from fastapi import APIRouter, FastAPI
@@ -23,6 +25,7 @@ app = FastAPI(
 )
 
 
+# check database connection
 @app.on_event("startup")
 async def startup_event():
     """Test database connection on startup"""
@@ -34,11 +37,13 @@ async def startup_event():
     logger.info("Database connection successful")
 
 
+# configure API router
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth.router)
 
 app.include_router(api_router)
 
+# start up the server
 if __name__ == "__main__":
     logger.info(f"Server listening on port {settings.API_PORT}")
 

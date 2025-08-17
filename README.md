@@ -16,3 +16,39 @@ In the future, the AI model will be moved to a dedicated server and communicate 
 ### Any to Any App
 
 The model we are using is an any-to-any model. For now we only enable text-to-text functionality in the frontend. In the future we will enable full any-to-any functionality in the frontend,
+
+### Add test cases for endpoint chat_with_model
+
+#### Test File Location
+
+Place your test files in a dedicated tests directory at the project root or inside the server folder:
+For endpoint tests, use a file like:
+
+#### Integration Tests
+
+These should test the endpoint as a whole, including FastAPI routing, dependency injection, and model interaction.
+
+test cases:
+
+- Successful chat request returns a valid response (mock model if needed)
+- Request when model/tokenizer is not loaded returns 500 error
+- Request with invalid payload returns 422 error (validation)
+- Large input or edge-case input (e.g., empty message list)
+- Response formatting (e.g., Markdown, newlines)
+
+#### Unit Tests
+
+These should test the logic inside the handler function, isolated from FastAPI and external dependencies.
+
+Unit test cases:
+
+- apply_chat_template produces expected output for a given conversation
+- decode returns expected text for given token IDs
+- Error handling: function raises HTTPException when model/tokenizer is None
+- Output post-processing (e.g., stripping newlines, handling special tokens)
+
+### Testing Strategy
+
+- Use FastAPI’s TestClient for integration tests to simulate HTTP requests.
+- Use mocking (e.g., unittest.mock) for unit tests to isolate dependencies like the model and tokenizer.
+- Consider using fixtures to set up test data and mock objects.

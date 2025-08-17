@@ -28,6 +28,7 @@ async def chat_with_model(
 
     try:
         # TODO: append history messages to the conversation list.
+        # TODO: enable thinking process and streaming it to the frontend.
         conversation = chat_request.messages
 
         text = tokenizer.apply_chat_template(

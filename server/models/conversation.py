@@ -15,7 +15,7 @@ class Conversation(Base):
     prompt = Column(String(4000), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan", order_by="Message.created_at")
 
     @classmethod
     def create_conversation(cls, db: Session, user_id: int, title: str, prompt: str) -> 'Conversation':

@@ -376,3 +376,219 @@ class TestGetConversationFromRequest:
         assert "User message 1" in all_contents
         assert "Assistant response 1" in all_contents
         assert "User message 3" in all_contents
+
+    def test_messages_ordered_by_created_at_ascending(self, db_session: Session):
+        """Test that messages are returned in ascending order by created_at timestamp."""
+        import time
+        
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+
+        # Create an existing conversation
+        existing_conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=1,
+            title="Message Order Test",
+            prompt="Test prompt"
+        )
+
+        # Add messages with explicit time delays to ensure different created_at timestamps
+        message1 = Message(
+            conversation_id=existing_conversation.id,
+            sent_by=SenderType.USER,
+            content="First message (oldest)"
+        )
+        db_session.add(message1)
+        db_session.commit()
+        
+        # Small delay to ensure different timestamps
+        time.sleep(0.01)
+        
+        message2 = Message(
+            conversation_id=existing_conversation.id,
+            sent_by=SenderType.ASSISTANT,
+            content="Second message"
+        )
+        db_session.add(message2)
+        db_session.commit()
+        
+        time.sleep(0.01)
+        
+        message3 = Message(
+            conversation_id=existing_conversation.id,
+            sent_by=SenderType.USER,
+            content="Third message (newest)"
+        )
+        db_session.add(message3)
+        db_session.commit()
+
+        # Create chat request to retrieve the conversation
+        chat_request = ChatRequest(
+            conversation_id=existing_conversation.id,
+            prompt="Ignored",
+            messages=[
+                ChatMessage(role=ChatRole.USER, content="New message")
+            ]
+        )
+
+        # Call the function
+        conversation = get_conversation_from_request(chat_request, db_session)
+
+        # Verify messages are ordered by created_at in ascending order
+        messages = conversation.messages
+        assert len(messages) == 3
+        
+        # Check that messages are in chronological order (oldest first)
+        assert messages[0].content == "First message (oldest)"
+        assert messages[1].content == "Second message"  
+        assert messages[2].content == "Third message (newest)"
+        
+        # Verify timestamps are actually in ascending order
+        assert messages[0].created_at <= messages[1].created_at
+        assert messages[1].created_at <= messages[2].created_at
+        
+        # Verify the order matches the insertion order
+        expected_order = [message1.id, message2.id, message3.id]
+        actual_order = [msg.id for msg in messages]
+        assert actual_order == expected_order
+
+    def test_messages_ordered_in_direct_conversation_access(self, db_session: Session):
+        """Test that messages are ordered correctly when accessing conversation.messages directly."""
+        import time
+        
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com", 
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+
+        # Create a conversation
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=1,
+            title="Direct Access Test",
+            prompt="Test prompt"
+        )
+
+        # Add messages in a specific order
+        messages_data = [
+            ("Message A - First", SenderType.USER),
+            ("Message B - Second", SenderType.ASSISTANT),
+            ("Message C - Third", SenderType.USER),
+            ("Message D - Fourth", SenderType.ASSISTANT),
+            ("Message E - Fifth", SenderType.USER)
+        ]
+        
+        created_message_ids = []
+        for content, sender_type in messages_data:
+            message = Message(
+                conversation_id=conversation.id,
+                sent_by=sender_type,
+                content=content
+            )
+            db_session.add(message)
+            db_session.commit()
+            created_message_ids.append(message.id)
+            time.sleep(0.01)  # Ensure different timestamps
+
+        # Refresh the conversation to get updated relationship
+        db_session.refresh(conversation)
+        
+        # Access messages directly through the relationship
+        messages = conversation.messages
+        
+        # Verify correct order (oldest first)
+        assert len(messages) == 5
+        assert messages[0].content == "Message A - First"
+        assert messages[1].content == "Message B - Second"
+        assert messages[2].content == "Message C - Third"
+        assert messages[3].content == "Message D - Fourth"
+        assert messages[4].content == "Message E - Fifth"
+        
+        # Verify timestamps are in ascending order
+        for i in range(len(messages) - 1):
+            assert messages[i].created_at <= messages[i + 1].created_at
+            
+        # Verify IDs match the creation order
+        actual_ids = [msg.id for msg in messages]
+        assert actual_ids == created_message_ids
+
+    def test_messages_ordered_with_bulk_insert(self, db_session: Session):
+        """Test message ordering when messages are inserted in bulk (out of chronological order)."""
+        import time
+        from datetime import datetime, timedelta, timezone
+        
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+
+        # Create a conversation
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=1,
+            title="Bulk Insert Test",
+            prompt="Test prompt"
+        )
+
+        # Create messages with specific timestamps (simulating out-of-order insertion)
+        base_time = datetime.now(timezone.utc)
+        
+        # Create message objects with manually set created_at times
+        message3 = Message(
+            conversation_id=conversation.id,
+            sent_by=SenderType.USER,
+            content="Third message chronologically"
+        )
+        
+        message1 = Message(
+            conversation_id=conversation.id,
+            sent_by=SenderType.USER,
+            content="First message chronologically"
+        )
+        
+        message2 = Message(
+            conversation_id=conversation.id,
+            sent_by=SenderType.ASSISTANT,
+            content="Second message chronologically"
+        )
+        
+        # Add them to session in non-chronological order
+        db_session.add_all([message3, message1, message2])
+        db_session.commit()
+        
+        # Now manually update their created_at timestamps to simulate different creation times
+        # Note: We need to do this after commit to ensure the timestamps are set
+        message1.created_at = base_time
+        message2.created_at = base_time + timedelta(seconds=1)
+        message3.created_at = base_time + timedelta(seconds=2)
+        
+        db_session.commit()
+        
+        # Refresh the conversation
+        db_session.refresh(conversation)
+        
+        # Verify messages are ordered by created_at, not insertion order
+        messages = conversation.messages
+        assert len(messages) == 3
+        
+        # Should be ordered by created_at (ascending)
+        assert messages[0].content == "First message chronologically"
+        assert messages[1].content == "Second message chronologically"
+        assert messages[2].content == "Third message chronologically"
+        
+        # Verify timestamps are in correct order
+        assert messages[0].created_at < messages[1].created_at < messages[2].created_at

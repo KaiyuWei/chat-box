@@ -17,3 +17,27 @@ def get_conversation_from_request(chat_request: ChatRequest, db: Session) -> Con
         conversation = Conversation.create_conversation(db, user_id, title, prompt)
     
     return conversation
+
+def generate_prompt(conversation: Conversation) -> str:
+    messages = conversation.messages
+    prompt = conversation.prompt
+
+    if messages:
+        # Append the latest user message to the prompt
+        latest_user_message = messages[-1].content
+        prompt += f"\nUser: {latest_user_message}\nAssistant:"
+
+    return prompt
+
+def _generate_system_prompt(prompt: str) -> str:
+    if not prompt:
+        return f"[System Instruction] You are a helpful assistant."
+    return f"[System Instruction] {prompt}"
+
+def _generate_conversation_history(conversation: Conversation) -> str:
+    from models.message import SenderType
+    history = []
+    for message in conversation.messages:
+        role = "User" if message.sent_by == SenderType.USER else "Assistant"
+        history.append(f"{role}: {message.content}")
+    return "\n".join(history)

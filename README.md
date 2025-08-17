@@ -17,6 +17,10 @@ In the future, the AI model will be moved to a dedicated server and communicate 
 
 The model we are using is an any-to-any model. For now we only enable text-to-text functionality in the frontend. In the future we will enable full any-to-any functionality in the frontend,
 
+### Add "session_user" table and model
+
+Use session users to enable storing chat history and continous chat.
+
 ### Add test cases for endpoint chat_with_model
 
 #### Test File Location

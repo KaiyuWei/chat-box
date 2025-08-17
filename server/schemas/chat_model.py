@@ -10,6 +10,7 @@ class ChatRole(str, Enum):
     USER = "user"
     ASSISTANT = "assistant"
 
+
 class ChatMessage(BaseModel):
     role: ChatRole = Field(..., description="Role that the message is from")
     content: str = Field(
@@ -28,4 +29,5 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
+    conversation_id: int = Field(..., description="ID of the conversation")
     messages: str = Field(..., description="Resulted text of processing", min_length=1)

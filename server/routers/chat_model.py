@@ -53,7 +53,7 @@ async def chat_with_model(
             db, conversation.id, chat_request.messages[0].content, response_message
         )
 
-        return ChatResponse(messages=response_message)
+        return ChatResponse(conversation_id=conversation.id, messages=response_message)
 
     except Exception as e:
         logger.error(f"Error loading model: {e}")

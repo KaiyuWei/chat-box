@@ -46,6 +46,14 @@ const ChatBox = () => {
 
         const chatResponse = await response.json();
         console.log("Backend response:", chatResponse);
+
+        const assistantMessage = {
+          id: messages.length + 2,
+          text: chatResponse.messages,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prevMessages) => [...prevMessages, assistantMessage]);
       } catch (error) {
         console.error("Error sending message to backend:", error);
       }

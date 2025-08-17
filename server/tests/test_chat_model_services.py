@@ -11,7 +11,7 @@ from schemas.chat_model import ChatRequest, ChatMessage, ChatRole
 from models.conversation import Conversation
 from models.message import Message, SenderType
 from models.user import User
-from services.chat_model_services import get_conversation_from_request, _generate_conversation_history
+from services.chat_model_services import get_conversation_from_request, _generate_conversation_history, generate_prompt
 
 
 class TestGetConversationFromRequest:
@@ -597,7 +597,7 @@ class TestGetConversationFromRequest:
 class TestGenerateConversationHistory:
     """Test the _generate_conversation_history function."""
 
-    def _create_test_conversation_with_messages(self, db_session: Session, messages_data: list) -> Conversation:
+    def _create_test_conversation_with_messages(self, db_session: Session, messages_data: list, prompt: str = "Test system prompt") -> Conversation:
         """Helper method to create a conversation with specified messages."""
         # Create a test user
         test_user = User(
@@ -613,7 +613,7 @@ class TestGenerateConversationHistory:
             db=db_session,
             user_id=test_user.id,
             title="Test Conversation",
-            prompt="Test prompt"
+            prompt=prompt
         )
 
         # Add messages to the conversation
@@ -636,23 +636,21 @@ class TestGenerateConversationHistory:
             ("I'm doing well, thank you! How can I help you?", SenderType.ASSISTANT),
             ("Can you explain quantum computing?", SenderType.USER),
             ("Quantum computing uses quantum mechanics principles...", SenderType.ASSISTANT),
-            ("That's interesting! Tell me more about qubits.", SenderType.USER),
         ]
         
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "You are a helpful assistant.")
         
         # Call the function
         result = _generate_conversation_history(conversation)
         
-        # Expected output
-        expected = (
-            "[Conversation History]\n"
-            "User: Hello, how are you today?\n"
-            "Assistant: I'm doing well, thank you! How can I help you?\n"
-            "User: Can you explain quantum computing?\n"
-            "Assistant: Quantum computing uses quantum mechanics principles...\n"
-            "User: That's interesting! Tell me more about qubits."
-        )
+        # Expected output - list of dictionaries
+        expected = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello, how are you today?"},
+            {"role": "assistant", "content": "I'm doing well, thank you! How can I help you?"},
+            {"role": "user", "content": "Can you explain quantum computing?"},
+            {"role": "assistant", "content": "Quantum computing uses quantum mechanics principles..."}
+        ]
         
         assert result == expected
 
@@ -661,21 +659,19 @@ class TestGenerateConversationHistory:
         messages_data = [
             ("First user message", SenderType.USER),
             ("Second user message", SenderType.USER),
-            ("Third user message", SenderType.USER),
         ]
         
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "Custom prompt")
         
         # Call the function
         result = _generate_conversation_history(conversation)
         
         # Expected output
-        expected = (
-            "[Conversation History]\n"
-            "User: First user message\n"
-            "User: Second user message\n"
-            "User: Third user message"
-        )
+        expected = [
+            {"role": "system", "content": "Custom prompt"},
+            {"role": "user", "content": "First user message"},
+            {"role": "user", "content": "Second user message"}
+        ]
         
         assert result == expected
 
@@ -686,17 +682,17 @@ class TestGenerateConversationHistory:
             ("Second assistant response", SenderType.ASSISTANT),
         ]
         
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "Assistant only prompt")
         
         # Call the function
         result = _generate_conversation_history(conversation)
         
         # Expected output
-        expected = (
-            "[Conversation History]\n"
-            "Assistant: First assistant response\n"
-            "Assistant: Second assistant response"
-        )
+        expected = [
+            {"role": "system", "content": "Assistant only prompt"},
+            {"role": "assistant", "content": "First assistant response"},
+            {"role": "assistant", "content": "Second assistant response"}
+        ]
         
         assert result == expected
 
@@ -704,32 +700,39 @@ class TestGenerateConversationHistory:
         """Test conversation history generation with no messages."""
         messages_data = []  # No messages
         
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "System only prompt")
         
         # Call the function
         result = _generate_conversation_history(conversation)
         
-        # Should return empty string when no messages
-        assert result == ""
-
-    def test_generate_conversation_history_with_single_message(self, db_session: Session):
-        """Test conversation history generation with a single message."""
-        messages_data = [
-            ("Single message from user", SenderType.USER),
+        # Should only include system message when no conversation messages
+        expected = [
+            {"role": "system", "content": "System only prompt"}
         ]
         
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        assert result == expected
+
+    def test_generate_conversation_history_preserves_message_order(self, db_session: Session):
+        """Test that conversation history preserves chronological message order."""
+        messages_data = [
+            ("Message 1 - First", SenderType.USER),
+            ("Message 2 - Response to first", SenderType.ASSISTANT),
+            ("Message 3 - Follow up", SenderType.USER),
+            ("Message 4 - Final response", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "Order test prompt")
         
         # Call the function
         result = _generate_conversation_history(conversation)
         
-        # Expected output
-        expected = (
-            "[Conversation History]\n"
-            "User: Single message from user"
-        )
-        
-        assert result == expected
+        # Verify the structure and order
+        assert len(result) == 5  # 1 system + 4 messages
+        assert result[0] == {"role": "system", "content": "Order test prompt"}
+        assert result[1] == {"role": "user", "content": "Message 1 - First"}
+        assert result[2] == {"role": "assistant", "content": "Message 2 - Response to first"}
+        assert result[3] == {"role": "user", "content": "Message 3 - Follow up"}
+        assert result[4] == {"role": "assistant", "content": "Message 4 - Final response"}
 
     def test_generate_conversation_history_with_special_characters(self, db_session: Session):
         """Test conversation history generation with special characters and formatting."""
@@ -739,85 +742,176 @@ class TestGenerateConversationHistory:
             ("What about newlines?\nAnd tabs?\tDo they work?", SenderType.USER),
         ]
         
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "Special chars prompt")
         
         # Call the function
         result = _generate_conversation_history(conversation)
         
         # Expected output - special characters should be preserved
-        expected = (
-            "[Conversation History]\n"
-            "User: Hello! 👋 How are you? @#$%^&*()\n"
-            "Assistant: I'm great! Here's some code: `print('Hello')` 🚀\n"
-            "User: What about newlines?\nAnd tabs?\tDo they work?"
-        )
+        expected = [
+            {"role": "system", "content": "Special chars prompt"},
+            {"role": "user", "content": "Hello! 👋 How are you? @#$%^&*()"},
+            {"role": "assistant", "content": "I'm great! Here's some code: `print('Hello')` 🚀"},
+            {"role": "user", "content": "What about newlines?\nAnd tabs?\tDo they work?"}
+        ]
         
         assert result == expected
 
-    def test_generate_conversation_history_preserves_message_order(self, db_session: Session):
-        """Test that conversation history preserves chronological message order."""
-        # This test relies on the fact that we've already tested message ordering
-        # in the get_conversation_from_request tests
-        messages_data = [
-            ("Message 1 - First", SenderType.USER),
-            ("Message 2 - Response to first", SenderType.ASSISTANT),
-            ("Message 3 - Follow up", SenderType.USER),
-            ("Message 4 - Final response", SenderType.ASSISTANT),
-        ]
-        
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
-        
-        # Call the function
-        result = _generate_conversation_history(conversation)
-        
-        # Verify the order is preserved in the output
-        lines = result.split('\n')
-        assert lines[0] == "[Conversation History]"
-        assert lines[1] == "User: Message 1 - First"
-        assert lines[2] == "Assistant: Message 2 - Response to first"
-        assert lines[3] == "User: Message 3 - Follow up"
-        assert lines[4] == "Assistant: Message 4 - Final response"
-        
-        # Verify total line count
-        assert len(lines) == 5
 
-    def test_generate_conversation_history_with_long_messages(self, db_session: Session):
-        """Test conversation history generation with very long message content."""
-        long_message = "This is a very long message. " * 50  # 1500 characters
-        
-        messages_data = [
-            (long_message, SenderType.USER),
-            ("Short response", SenderType.ASSISTANT),
-        ]
-        
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
-        
-        # Call the function
-        result = _generate_conversation_history(conversation)
-        
-        # Verify the long message is included in full
-        assert long_message in result
-        assert "User: " + long_message in result
-        assert "Assistant: Short response" in result
-        assert result.startswith("[Conversation History]\n")
+class TestGeneratePrompt:
+    """Test the generate_prompt function."""
 
-    def test_generate_conversation_history_with_empty_message_content(self, db_session: Session):
-        """Test conversation history generation with empty message content."""
-        messages_data = [
-            ("", SenderType.USER),  # Empty content
-            ("Response to empty message", SenderType.ASSISTANT),
-        ]
-        
-        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
-        
-        # Call the function
-        result = _generate_conversation_history(conversation)
-        
-        # Expected output - empty content should still be formatted
-        expected = (
-            "[Conversation History]\n"
-            "User: \n"
-            "Assistant: Response to empty message"
+    def _create_test_conversation_with_messages(self, db_session: Session, messages_data: list, prompt: str = "Test system prompt") -> Conversation:
+        """Helper method to create a conversation with specified messages."""
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
         )
+        db_session.add(test_user)
+        db_session.commit()
+
+        # Create a conversation
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt=prompt
+        )
+
+        # Add messages to the conversation
+        for content, sender_type in messages_data:
+            message = Message(
+                conversation_id=conversation.id,
+                sent_by=sender_type,
+                content=content
+            )
+            db_session.add(message)
+        
+        db_session.commit()
+        db_session.refresh(conversation)
+        return conversation
+
+    def test_generate_prompt_with_conversation_history(self, db_session: Session):
+        """Test generate_prompt with existing conversation history."""
+        messages_data = [
+            ("Hello, how are you today?", SenderType.USER),
+            ("I'm doing well, thank you! How can I help you?", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "You are a helpful assistant.")
+        new_message = "Tell me about elephants"
+        
+        # Call the function
+        result = generate_prompt(conversation, new_message)
+        
+        # Expected output - history + new message
+        expected = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello, how are you today?"},
+            {"role": "assistant", "content": "I'm doing well, thank you! How can I help you?"},
+            {"role": "user", "content": "Tell me about elephants"}
+        ]
+        
+        assert result == expected
+
+    def test_generate_prompt_with_empty_conversation(self, db_session: Session):
+        """Test generate_prompt with no existing messages."""
+        messages_data = []  # No messages
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "You are a helpful chatbot.")
+        new_message = "Hello world!"
+        
+        # Call the function
+        result = generate_prompt(conversation, new_message)
+        
+        # Expected output - only system prompt + new message
+        expected = [
+            {"role": "system", "content": "You are a helpful chatbot."},
+            {"role": "user", "content": "Hello world!"}
+        ]
+        
+        assert result == expected
+
+    def test_generate_prompt_with_long_conversation(self, db_session: Session):
+        """Test generate_prompt with a longer conversation history."""
+        messages_data = [
+            ("What's the capital of France?", SenderType.USER),
+            ("The capital of France is Paris.", SenderType.ASSISTANT),
+            ("What about Germany?", SenderType.USER),
+            ("The capital of Germany is Berlin.", SenderType.ASSISTANT),
+            ("And Italy?", SenderType.USER),
+            ("The capital of Italy is Rome.", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "Geography expert assistant")
+        new_message = "What about Spain?"
+        
+        # Call the function
+        result = generate_prompt(conversation, new_message)
+        
+        # Expected output - full history + new message
+        expected = [
+            {"role": "system", "content": "Geography expert assistant"},
+            {"role": "user", "content": "What's the capital of France?"},
+            {"role": "assistant", "content": "The capital of France is Paris."},
+            {"role": "user", "content": "What about Germany?"},
+            {"role": "assistant", "content": "The capital of Germany is Berlin."},
+            {"role": "user", "content": "And Italy?"},
+            {"role": "assistant", "content": "The capital of Italy is Rome."},
+            {"role": "user", "content": "What about Spain?"}
+        ]
+        
+        assert result == expected
+
+    def test_generate_prompt_preserves_message_order(self, db_session: Session):
+        """Test that generate_prompt preserves chronological message order."""
+        messages_data = [
+            ("First question", SenderType.USER),
+            ("First answer", SenderType.ASSISTANT),
+            ("Second question", SenderType.USER),
+            ("Second answer", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "Order preservation test")
+        new_message = "Third question"
+        
+        # Call the function
+        result = generate_prompt(conversation, new_message)
+        
+        # Verify structure and order
+        assert len(result) == 6  # 1 system + 4 history + 1 new
+        assert result[0]["role"] == "system"
+        assert result[1]["role"] == "user" and result[1]["content"] == "First question"
+        assert result[2]["role"] == "assistant" and result[2]["content"] == "First answer"
+        assert result[3]["role"] == "user" and result[3]["content"] == "Second question"
+        assert result[4]["role"] == "assistant" and result[4]["content"] == "Second answer"
+        assert result[5]["role"] == "user" and result[5]["content"] == "Third question"
+
+    def test_generate_prompt_with_special_characters_in_new_message(self, db_session: Session):
+        """Test generate_prompt with special characters in the new message."""
+        messages_data = [
+            ("Hello", SenderType.USER),
+            ("Hi there!", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data, "Test assistant")
+        new_message = "Can you help with this code? `print('Hello 🌍')`\nThanks!"
+        
+        # Call the function
+        result = generate_prompt(conversation, new_message)
+        
+        # Verify the new message is preserved correctly
+        assert result[-1]["role"] == "user"
+        assert result[-1]["content"] == "Can you help with this code? `print('Hello 🌍')`\nThanks!"
+        
+        # Verify full structure
+        expected = [
+            {"role": "system", "content": "Test assistant"},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi there!"},
+            {"role": "user", "content": "Can you help with this code? `print('Hello 🌍')`\nThanks!"}
+        ]
         
         assert result == expected

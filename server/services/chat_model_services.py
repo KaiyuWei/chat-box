@@ -1,4 +1,5 @@
 from models import Conversation, Message
+from models.conversation import SYSTEM_PROMPT_TYPE
 from models.message import SenderType
 from schemas import ChatRequest
 from sqlalchemy.orm import Session, joinedload
@@ -28,29 +29,20 @@ def get_conversation_from_request(
     return conversation
 
 
-def generate_prompt(conversation: Conversation) -> str:
-    system_prompt = _generate_system_prompt(conversation.prompt)
+def generate_prompt(conversation: Conversation, new_message: str) -> list[dict]:
+    """Generate a complete prompt for the chat model based on the conversation."""
+
     history = _generate_conversation_history(conversation)
-    task_description = _generate_task_description(conversation)
-    return f"{system_prompt}\n{history}\n{task_description}"
+    history.append({"role": "user", "content": new_message})
+    return history
 
 
-def _generate_system_prompt(prompt: str) -> str:
-    if not prompt:
-        return f"[System Instruction] You are a helpful assistant."
-    return f"[System Instruction]\n{prompt}"
-
-
-def _generate_conversation_history(conversation: Conversation) -> str:
-    history = []
+def _generate_conversation_history(conversation: Conversation) -> list[dict]:
+    """Generate a list of messages in the conversation for the chat model."""
+    history = [{"role": SYSTEM_PROMPT_TYPE, "content": conversation.prompt}]
 
     for message in conversation.messages:
-        role = "User" if message.sent_by == SenderType.USER else "Assistant"
-        history.append(f"{role}: {message.content}")
+        role = "user" if message.sent_by == SenderType.USER else "assistant"
+        history.append({"role": role, "content": message.content})
 
-    joined_messages = "\n".join(history)
-    return f"[Conversation History]\n{joined_messages}" if joined_messages else ""
-
-
-def _generate_task_description(conversation: Conversation) -> str:
-    return f"[Task]\nReply to the last user message."
+    return history

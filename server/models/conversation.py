@@ -1,28 +1,39 @@
-from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
-from sqlalchemy.sql import func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Session, relationship
+from sqlalchemy.sql import func
 
 from .base import Base
 
 DEFAULT_SYSTEM_PROMPT = "You are a helpful and friendly assistant."
+SYSTEM_PROMPT_TYPE = "system"
+
 
 class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     title = Column(String(255), nullable=False)
     prompt = Column(String(4000), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan", order_by="Message.created_at")
+    messages = relationship(
+        "Message",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="Message.created_at",
+    )
 
     @classmethod
-    def create_conversation(cls, db: Session, user_id: int, title: str, prompt: str) -> 'Conversation':
+    def create_conversation(
+        cls, db: Session, user_id: int, title: str, prompt: str
+    ) -> "Conversation":
         new_conversation = cls(
             user_id=user_id,
             title=title,
-            prompt=prompt if prompt else DEFAULT_SYSTEM_PROMPT
+            prompt=prompt if prompt else DEFAULT_SYSTEM_PROMPT,
         )
         db.add(new_conversation)
         db.commit()
@@ -30,5 +41,5 @@ class Conversation(Base):
         return new_conversation
 
     @classmethod
-    def get_by_id(cls, db: Session, conversation_id: int) -> 'Conversation':
+    def get_by_id(cls, db: Session, conversation_id: int) -> "Conversation":
         return db.query(cls).filter(cls.id == conversation_id).first()

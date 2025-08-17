@@ -1,4 +1,5 @@
 import logging
+from cmd import PROMPT
 
 import chat_model_loader
 import services
@@ -8,7 +9,6 @@ from models import Conversation
 from schemas import ChatRequest, ChatResponse
 from sqlalchemy.orm import Session
 
-MODEL_NAME = "Qwen/Qwen2.5-Omni-3B"
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat_model"])
 
@@ -31,27 +31,24 @@ async def chat_with_model(
     try:
         # TODO: enable thinking process and streaming it to the frontend.
         conversation = services.get_conversation_from_request(chat_request, db)
-        complete_prompt = services.generate_prompt(conversation)
+        complete_prompt = services.generate_prompt(
+            conversation, chat_request.messages[0].content
+        )
+        # TODO: store user message
 
         text = tokenizer.apply_chat_template(
             complete_prompt,
             add_generation_prompt=True,
             tokenize=False,
-            enable_thinking=True,
+            enable_thinking=False,
         )
         inputs = tokenizer([text], return_tensors="pt").to(model.device)
-        text_ids = model.generate(**inputs, max_new_tokens=32768)
+        text_ids = model.generate(**inputs, max_new_tokens=100)
 
         output_ids = text_ids[0][len(inputs.input_ids[0]) :].tolist()
-        try:
-            index = len(output_ids) - output_ids[::-1].index(151668)
-        except ValueError:
-            index = 0
+        content = tokenizer.decode(output_ids, skip_special_tokens=True).strip("\n")
 
-        content = tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip(
-            "\n"
-        )
-
+        # TODO: store assistant's message
         return ChatResponse(messages=content)
 
     except Exception as e:

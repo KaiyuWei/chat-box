@@ -1,6 +1,3 @@
-import logging
-
-# debug
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import logging as transformers_logging
 
@@ -15,7 +12,11 @@ tokenizer = None
 def load_model_and_processor():
     global model, tokenizer
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
+
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME, torch_dtype="auto", device_map="auto"
+        MODEL_NAME,
+        torch_dtype="auto",
+        device_map="auto",
+        trust_remote_code=True,
     )

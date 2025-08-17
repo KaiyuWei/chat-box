@@ -13,19 +13,23 @@ In the future, the AI model will be moved to a dedicated server and communicate 
 - **Better Resource Management**: AI processing can be optimized on specialized hardware
 - **Service Independence**: AI model updates and maintenance won't require app downtime
 
-### Any to Any App
+## Any to Any App
 
 The model we are using is an any-to-any model. For now we only enable text-to-text functionality in the frontend. In the future we will enable full any-to-any functionality in the frontend,
 
-### Add "session_user" table and model
+## Add "session_user" table and model
 
 Use session users to enable storing chat history and continous chat.
 
-### Add real user auth system
+## enable thinking process and streaming it to the frontend.
+
+## Improve the coding style, try to write shorter function.
+
+## Add real user auth system
 
 Add pages for user reigister and login. For now use Dummy user with id 1.
 
-### Sliding window + Running summary
+## Sliding window + Running summary
 
 Currently using eager loading to load a conversation + all of its messages. This will have performance problem when the number of messages of a conversation is large.
 
@@ -38,7 +42,7 @@ For accelerating the processing, we should not query and send too many messages 
 - Prompt = system + running_summary + last_N_messages (+ optional facts/memories).
 - Store the summary in your DB (you already have a conversation_summaries table above).
 
-### Add test cases for endpoint chat_with_model
+## Add test cases for endpoint chat_with_model
 
 #### Test File Location
 

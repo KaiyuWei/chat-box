@@ -29,15 +29,10 @@ def get_conversation_from_request(
 
 
 def generate_prompt(conversation: Conversation) -> str:
-    messages = conversation.messages
-    prompt = conversation.prompt
-
-    if messages:
-        # Append the latest user message to the prompt
-        latest_user_message = messages[-1].content
-        prompt += f"\nUser: {latest_user_message}\nAssistant:"
-
-    return prompt
+    system_prompt = _generate_system_prompt(conversation.prompt)
+    history = _generate_conversation_history(conversation)
+    task_description = _generate_task_description(conversation)
+    return f"{system_prompt}\n{history}\n{task_description}"
 
 
 def _generate_system_prompt(prompt: str) -> str:

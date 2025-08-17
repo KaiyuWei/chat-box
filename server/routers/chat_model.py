@@ -1,12 +1,12 @@
 import logging
 
 import chat_model_loader
+import services
 from database import get_mysql_db
 from fastapi import APIRouter, Depends, HTTPException, status
+from models import Conversation
 from schemas import ChatRequest, ChatResponse
 from sqlalchemy.orm import Session
-from models import Conversation
-import services
 
 MODEL_NAME = "Qwen/Qwen2.5-Omni-3B"
 logger = logging.getLogger(__name__)
@@ -29,12 +29,12 @@ async def chat_with_model(
         )
 
     try:
-        # TODO: append history messages to the conversation list.
         # TODO: enable thinking process and streaming it to the frontend.
         conversation = services.get_conversation_from_request(chat_request, db)
+        complete_prompt = services.generate_prompt(conversation)
 
         text = tokenizer.apply_chat_template(
-            conversation.messages,
+            complete_prompt,
             add_generation_prompt=True,
             tokenize=False,
             enable_thinking=True,

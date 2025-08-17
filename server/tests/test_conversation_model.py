@@ -7,7 +7,7 @@ using a real SQLite database in memory.
 
 import pytest
 from datetime import datetime
-from models.conversation import Conversation, create_conversation
+from models.conversation import Conversation
 from models.user import User
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -32,7 +32,7 @@ class TestCreateConversationFunction:
         title = "Test Conversation"
         prompt = "This is a test prompt"
         
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title=title,
@@ -73,7 +73,7 @@ class TestCreateConversationFunction:
         title = "Test Conversation"
         prompt = ""
         
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title=title,
@@ -99,7 +99,7 @@ class TestCreateConversationFunction:
         # Create conversation with None prompt
         title = "Test Conversation"
         
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title=title,
@@ -126,7 +126,7 @@ class TestCreateConversationFunction:
         long_title = "A" * 255
         prompt = "Test prompt"
         
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title=long_title,
@@ -153,7 +153,7 @@ class TestCreateConversationFunction:
         title = "Test Conversation"
         long_prompt = "A" * 4000
         
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title=title,
@@ -172,7 +172,7 @@ class TestCreateConversationFunction:
         
         # This should raise an IntegrityError due to foreign key constraint
         with pytest.raises(IntegrityError):
-            create_conversation(
+            Conversation.create_conversation(
                 db=db_session,
                 user_id=non_existent_user_id,
                 title=title,
@@ -192,7 +192,7 @@ class TestCreateConversationFunction:
         db_session.refresh(test_user)
 
         # Create first conversation
-        conversation1 = create_conversation(
+        conversation1 = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title="First Conversation",
@@ -200,7 +200,7 @@ class TestCreateConversationFunction:
         )
 
         # Create second conversation
-        conversation2 = create_conversation(
+        conversation2 = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title="Second Conversation",
@@ -235,7 +235,7 @@ class TestCreateConversationFunction:
         title = "Test Conversation! @#$%^&*()_+-=[]{}|;':\",./<>?"
         prompt = "Test prompt with émojis 🚀 and unicode characters: αβγδε"
         
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title=title,
@@ -262,7 +262,7 @@ class TestCreateConversationFunction:
         title = "测试对话 - Тест разговор - محادثة اختبار"
         prompt = "Unicode prompt: 你好世界 - Привет мир - مرحبا بالعالم"
         
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title=title,
@@ -285,7 +285,7 @@ class TestCreateConversationFunction:
         db_session.commit()
         db_session.refresh(test_user)
 
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title="Test Conversation",
@@ -312,7 +312,7 @@ class TestCreateConversationFunction:
         db_session.refresh(test_user)
 
         # Create conversation
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title="Test Conversation",
@@ -348,7 +348,7 @@ class TestCreateConversationFunction:
         db_session.refresh(test_user)
 
         # SQLite allows empty strings, so test that it's stored correctly
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title="",  # Empty title
@@ -371,7 +371,7 @@ class TestCreateConversationFunction:
         db_session.commit()
         db_session.refresh(test_user)
 
-        conversation = create_conversation(
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
             title="Test Conversation",
@@ -386,3 +386,264 @@ class TestCreateConversationFunction:
         assert hasattr(conversation, 'prompt')
         assert hasattr(conversation, 'created_at')
         assert hasattr(conversation, 'updated_at')
+
+
+class TestConversationGetById:
+    """Test the get_by_id classmethod."""
+
+    def test_get_by_id_success(self, db_session: Session):
+        """Test successfully retrieving a conversation by ID."""
+        # Create a test user first
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        # Create a conversation
+        original_conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt="Test prompt"
+        )
+
+        # Retrieve the conversation by ID
+        retrieved_conversation = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=original_conversation.id
+        )
+
+        # Verify the retrieved conversation matches the original
+        assert retrieved_conversation is not None
+        assert isinstance(retrieved_conversation, Conversation)
+        assert retrieved_conversation.id == original_conversation.id
+        assert retrieved_conversation.user_id == original_conversation.user_id
+        assert retrieved_conversation.title == original_conversation.title
+        assert retrieved_conversation.prompt == original_conversation.prompt
+        assert retrieved_conversation.created_at == original_conversation.created_at
+
+    def test_get_by_id_not_found(self, db_session: Session):
+        """Test retrieving a conversation with non-existent ID returns None."""
+        non_existent_id = 99999
+        
+        result = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=non_existent_id
+        )
+        
+        assert result is None
+
+    def test_get_by_id_with_zero_id(self, db_session: Session):
+        """Test retrieving a conversation with ID 0 returns None."""
+        result = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=0
+        )
+        
+        assert result is None
+
+    def test_get_by_id_with_negative_id(self, db_session: Session):
+        """Test retrieving a conversation with negative ID returns None."""
+        result = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=-1
+        )
+        
+        assert result is None
+
+    def test_get_by_id_multiple_conversations(self, db_session: Session):
+        """Test get_by_id works correctly when multiple conversations exist."""
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        # Create multiple conversations
+        conversation1 = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="First Conversation",
+            prompt="First prompt"
+        )
+        
+        conversation2 = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Second Conversation",
+            prompt="Second prompt"
+        )
+        
+        conversation3 = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Third Conversation",
+            prompt="Third prompt"
+        )
+
+        # Retrieve each conversation by ID and verify they're correct
+        retrieved1 = Conversation.get_by_id(db=db_session, conversation_id=conversation1.id)
+        retrieved2 = Conversation.get_by_id(db=db_session, conversation_id=conversation2.id)
+        retrieved3 = Conversation.get_by_id(db=db_session, conversation_id=conversation3.id)
+
+        # Verify each retrieved conversation matches the original
+        assert retrieved1.id == conversation1.id
+        assert retrieved1.title == "First Conversation"
+        assert retrieved1.prompt == "First prompt"
+
+        assert retrieved2.id == conversation2.id
+        assert retrieved2.title == "Second Conversation"
+        assert retrieved2.prompt == "Second prompt"
+
+        assert retrieved3.id == conversation3.id
+        assert retrieved3.title == "Third Conversation"
+        assert retrieved3.prompt == "Third prompt"
+
+        # Verify they're all different conversations
+        assert retrieved1.id != retrieved2.id != retrieved3.id
+
+    def test_get_by_id_with_different_users(self, db_session: Session):
+        """Test get_by_id retrieves conversations regardless of user ownership."""
+        # Create two test users
+        user1 = User(
+            username="user1",
+            email="user1@example.com",
+            password_hash="hashed_password1"
+        )
+        user2 = User(
+            username="user2",
+            email="user2@example.com",
+            password_hash="hashed_password2"
+        )
+        db_session.add_all([user1, user2])
+        db_session.commit()
+        db_session.refresh(user1)
+        db_session.refresh(user2)
+
+        # Create conversations for different users
+        conversation1 = Conversation.create_conversation(
+            db=db_session,
+            user_id=user1.id,
+            title="User 1 Conversation",
+            prompt="User 1 prompt"
+        )
+        
+        conversation2 = Conversation.create_conversation(
+            db=db_session,
+            user_id=user2.id,
+            title="User 2 Conversation",
+            prompt="User 2 prompt"
+        )
+
+        # Retrieve conversations by ID
+        retrieved1 = Conversation.get_by_id(db=db_session, conversation_id=conversation1.id)
+        retrieved2 = Conversation.get_by_id(db=db_session, conversation_id=conversation2.id)
+
+        # Verify we get the correct conversations
+        assert retrieved1.id == conversation1.id
+        assert retrieved1.user_id == user1.id
+        assert retrieved1.title == "User 1 Conversation"
+
+        assert retrieved2.id == conversation2.id
+        assert retrieved2.user_id == user2.id
+        assert retrieved2.title == "User 2 Conversation"
+
+    def test_get_by_id_return_type(self, db_session: Session):
+        """Test that get_by_id returns the correct type."""
+        # Create a test user and conversation
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt="Test prompt"
+        )
+
+        # Retrieve the conversation
+        retrieved = Conversation.get_by_id(db=db_session, conversation_id=conversation.id)
+
+        # Verify return type and attributes
+        assert isinstance(retrieved, Conversation)
+        assert hasattr(retrieved, 'id')
+        assert hasattr(retrieved, 'user_id')
+        assert hasattr(retrieved, 'title')
+        assert hasattr(retrieved, 'prompt')
+        assert hasattr(retrieved, 'created_at')
+        assert hasattr(retrieved, 'updated_at')
+
+    def test_get_by_id_with_none_prompt(self, db_session: Session):
+        """Test get_by_id works with conversations that have None prompt."""
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        # Create conversation with None prompt
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt=None
+        )
+
+        # Retrieve the conversation
+        retrieved = Conversation.get_by_id(db=db_session, conversation_id=conversation.id)
+
+        # Verify the conversation is retrieved correctly
+        assert retrieved is not None
+        assert retrieved.id == conversation.id
+        assert retrieved.title == "Test Conversation"
+        assert retrieved.prompt is None
+
+    def test_get_by_id_with_special_characters(self, db_session: Session):
+        """Test get_by_id works with conversations containing special characters."""
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        # Create conversation with special characters
+        title_with_special_chars = "Test! @#$%^&*()_+-=[]{}|;':\",./<>?"
+        prompt_with_unicode = "Unicode: 你好世界 - Привет мир - مرحبا بالعالم 🚀"
+        
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title=title_with_special_chars,
+            prompt=prompt_with_unicode
+        )
+
+        # Retrieve the conversation
+        retrieved = Conversation.get_by_id(db=db_session, conversation_id=conversation.id)
+
+        # Verify the conversation is retrieved correctly with all special characters
+        assert retrieved is not None
+        assert retrieved.id == conversation.id
+        assert retrieved.title == title_with_special_chars
+        assert retrieved.prompt == prompt_with_unicode

@@ -29,6 +29,8 @@ async def create_user(user: UserCreate, db: Session = Depends(get_mysql_db)):
             )
 
         password_hash = UserCreate.hash_password(user.password)
+
+        # TODO: move the database interaction to a funciton in User model class
         new_user = User(
             username=user.username, email=user.email, password_hash=password_hash
         )

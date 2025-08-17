@@ -18,6 +18,7 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    conversation_id: int = Field(None, description="ID of the conversation")
     messages: list[ChatMessage] = Field(
         ..., description="List of messages in the chat", min_length=1, max_length=10
     )

@@ -23,7 +23,7 @@
     color: hsl(var(--message-user-foreground));
   }
   .bg-message-other {
-    background-color: hsl(var(--message-other));
+    background-color: hsl(var(--message-other)) !important;
   }
   .text-message-other-foreground {
     color: hsl(var(--message-other-foreground));
@@ -37,18 +37,18 @@
   --ring: 222.2 84% 4.9%;
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
-  
+
   /* Chat-specific colors */
   --chat-background: 210 40% 98%;
   --chat-secondary: 0 0% 100%;
   --chat-accent: 220 13% 91%;
-  
+
   /* Message colors */
   --message-user: 221 83% 53%;
   --message-user-foreground: 210 40% 98%;
-  --message-other: 210 40% 98%;
+  --message-other: 210 40% 85%;
   --message-other-foreground: 222.2 84% 4.9%;
-  
+
   /* Standard color palette */
   --primary: 222.2 47.4% 11.2%;
   --primary-foreground: 210 40% 98%;
@@ -64,7 +64,7 @@
   --popover-foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
   --card-foreground: 222.2 84% 4.9%;
-  
+
   /* Sidebar colors */
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
@@ -74,7 +74,7 @@
   --sidebar-accent-foreground: 240 5.9% 10%;
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 217.2 91.2% 59.8%;
-  
+
   /* Border radius */
   --radius: 0.5rem;
 }
@@ -85,7 +85,7 @@
     margin: 0;
     padding: 0;
   }
-  
+
   html {
     margin: 0;
     padding: 0;
@@ -93,19 +93,20 @@
     width: 100%;
     overflow: hidden;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     margin: 0 !important;
     padding: 0 !important;
     height: 100vh;
     width: 100vw;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
   }
-  
+
   #root {
     height: 100vh !important;
     width: 100vw !important;

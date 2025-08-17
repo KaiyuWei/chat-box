@@ -1,6 +1,35 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* CSS Custom Properties - Define the actual color values */
+/* Force Tailwind to generate custom color classes */
+@layer components {
+  .bg-chat-secondary {
+    background-color: hsl(var(--chat-secondary));
+  }
+  .bg-chat-background {
+    background-color: hsl(var(--chat-background));
+  }
+  .bg-muted {
+    background-color: hsl(var(--muted));
+  }
+  .border-border {
+    border-color: hsl(var(--border));
+  }
+  .bg-message-user {
+    background-color: hsl(var(--message-user));
+  }
+  .text-message-user-foreground {
+    color: hsl(var(--message-user-foreground));
+  }
+  .bg-message-other {
+    background-color: hsl(var(--message-other));
+  }
+  .text-message-other-foreground {
+    color: hsl(var(--message-other-foreground));
+  }
+}
+
 :root {
   /* Standard UI colors */
   --border: 214.3 31.8% 91.4%;
@@ -50,124 +79,44 @@
   --radius: 0.5rem;
 }
 
-/* Tailwind v4 Theme Configuration */
-@theme {
-  /* Colors using CSS custom properties */
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  
-  /* Chat-specific colors */
-  --color-chat-background: hsl(var(--chat-background));
-  --color-chat-secondary: hsl(var(--chat-secondary));
-  --color-chat-accent: hsl(var(--chat-accent));
-  
-  /* Message colors */
-  --color-message-user: hsl(var(--message-user));
-  --color-message-user-foreground: hsl(var(--message-user-foreground));
-  --color-message-other: hsl(var(--message-other));
-  --color-message-other-foreground: hsl(var(--message-other-foreground));
-  
-  /* Standard color palette */
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  
-  /* Sidebar colors */
-  --color-sidebar: hsl(var(--sidebar-background));
-  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
-  --color-sidebar-primary: hsl(var(--sidebar-primary));
-  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
-  --color-sidebar-border: hsl(var(--sidebar-border));
-  --color-sidebar-ring: hsl(var(--sidebar-ring));
-  
-  /* Border radius */
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-  
-  /* Container */
-  --container-center: true;
-  --container-padding: 2rem;
-  --container-screens-2xl: 1400px;
-}
-
-/* Custom animations */
-@keyframes accordion-down {
-  from {
-    height: 0;
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
-  to {
-    height: var(--radix-accordion-content-height);
+  
+  html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
   }
-}
-
-@keyframes accordion-up {
-  from {
-    height: var(--radix-accordion-content-height);
+  
+  body {
+    @apply bg-background text-foreground;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100vh;
+    width: 100vw;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
   }
-  to {
-    height: 0;
+  
+  #root {
+    height: 100vh !important;
+    width: 100vw !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
-}
-
-@theme {
-  /* Animations */
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
-}
-
-/* Basic reset and defaults */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
-
-body {
-  margin: 0 !important;
-  padding: 0 !important;
-  height: 100vh;
-  width: 100vw;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
-  background-color: hsl(var(--background));
-}
-
-#root {
-  height: 100vh !important;
-  width: 100vw !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }

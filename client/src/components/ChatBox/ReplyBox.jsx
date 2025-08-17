@@ -20,19 +20,19 @@ const ReplyBox = ({ onSendMessage }) => {
   };
 
   return (
-    <div className="p-4 border-t border-border bg-chat-secondary">
+    <div className="p-4 border-t border-gray-200 bg-gray-50">
       <div className="flex space-x-2">
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
-          className="flex-1 bg-background border-border"
+          className="flex-1 bg-white border-gray-300"
         />
         <Button
           onClick={handleSendMessage}
           size="icon"
-          className="bg-primary hover:bg-primary/90"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
         >
           <Send className="h-4 w-4" />
         </Button>

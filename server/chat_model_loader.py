@@ -1,3 +1,4 @@
+from config import chat_model_config
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import logging as transformers_logging
 
@@ -18,5 +19,5 @@ def load_model_and_processor():
         MODEL_NAME,
         torch_dtype="auto",
         device_map="auto",
-        trust_remote_code=True,
+        trust_remote_code=chat_model_config.TRUST_REMOTE_CODE,
     )

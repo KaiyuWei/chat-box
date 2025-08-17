@@ -9,6 +9,8 @@ from models import Conversation
 from schemas import ChatRequest, ChatResponse
 from sqlalchemy.orm import Session
 
+from server.config import chat_model_config
+
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat_model"])
 
@@ -43,7 +45,9 @@ async def chat_with_model(
             enable_thinking=False,
         )
         inputs = tokenizer([text], return_tensors="pt").to(model.device)
-        text_ids = model.generate(**inputs, max_new_tokens=100)
+        text_ids = model.generate(
+            **inputs, max_new_tokens=chat_model_config.MAX_NEW_TOKENS
+        )
 
         output_ids = text_ids[0][len(inputs.input_ids[0]) :].tolist()
         content = tokenizer.decode(output_ids, skip_special_tokens=True).strip("\n")

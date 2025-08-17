@@ -27,10 +27,14 @@ Add pages for user reigister and login. For now use Dummy user with id 1.
 
 ### Sliding window + Running summary
 
+Currently using eager loading to load a conversation + all of its messages. This will have performance problem when the number of messages of a conversation is large.
+
 For accelerating the processing, we should not query and send too many messages to the AI model all at once:
 
 - Keep only the last N messages verbatim (e.g., 12–30 turns).
 - Maintain a running summary of older content (update it whenever the convo exceeds a threshold).
+  - After inserting a new message, check a cheap condition (e.g., msg_count_since_last_summary >= 30)
+  - If tripped, enqueue a small incremental summarization over the range (last_summarized_message_id+1 … newest_safe_id).
 - Prompt = system + running_summary + last_N_messages (+ optional facts/memories).
 - Store the summary in your DB (you already have a conversation_summaries table above).
 

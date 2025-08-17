@@ -1,5 +1,5 @@
 from schemas import ChatRequest
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from models import Conversation
 
 DUMMY_USER_ID = 1
@@ -12,7 +12,7 @@ def get_conversation_from_request(chat_request: ChatRequest, db: Session) -> Con
     prompt = chat_request.prompt if chat_request.prompt else ""
 
     if conversation_id is not None:
-        conversation = Conversation.get_by_id(conversation_id, db)
+        conversation = db.query(Conversation).options(joinedload(Conversation.messages)).filter(Conversation.id == conversation_id).first()
     else:
         conversation = Conversation.create_conversation(db, user_id, title, prompt)
     

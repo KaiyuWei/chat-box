@@ -33,8 +33,6 @@ async def chat_with_model(
             conversation, chat_request.messages[0].content
         )
 
-        logger.info(f">>>>>>>> Complete prompt: {complete_prompt}")
-
         text = tokenizer.apply_chat_template(
             complete_prompt,
             add_generation_prompt=True,

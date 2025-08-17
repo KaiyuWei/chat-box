@@ -11,6 +11,10 @@ class Settings:
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
     HOST: str = os.getenv("HOST", "127.0.0.1")
 
+    # CORS settings
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    BACKEND_URL: str = os.getenv("BACKEND_URL", "http://localhost:8000")
+
     # Database settings
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_USER: str = os.getenv("DB_USER", "user")

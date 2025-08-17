@@ -11,7 +11,7 @@ const ChatBox = () => {
     },
   ]);
 
-  const handleSendMessage = (messageText) => {
+  const handleSendMessage = async (messageText) => {
     if (messageText.trim()) {
       const newMessage = {
         id: messages.length + 1,
@@ -20,6 +20,35 @@ const ChatBox = () => {
         timestamp: new Date(),
       };
       setMessages([...messages, newMessage]);
+
+      try {
+        const chatRequest = {
+          messages: [
+            {
+              role: "user",
+              content: messageText,
+            },
+          ],
+        };
+
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+        const response = await fetch(`${apiBaseUrl}/api/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(chatRequest),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const chatResponse = await response.json();
+        console.log("Backend response:", chatResponse);
+      } catch (error) {
+        console.error("Error sending message to backend:", error);
+      }
     }
   };
 

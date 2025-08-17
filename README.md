@@ -25,6 +25,8 @@ Use session users to enable storing chat history and continous chat.
 
 ## Improve the coding style, try to write shorter function.
 
+## When user click the send button, the button should turn to a "stop" button for terminating the process.
+
 ## Add real user auth system
 
 Add pages for user reigister and login. For now use Dummy user with id 1.

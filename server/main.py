@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 try:
     import uvicorn
     from fastapi import APIRouter, FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
 except ImportError:
     logger.error("Error: Required packages not installed.")
     exit(1)
@@ -23,6 +24,15 @@ app = FastAPI(
     title="Chat Application API",
     description="A simple chat application backend",
     version="1.0.0",
+)
+
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_URL],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

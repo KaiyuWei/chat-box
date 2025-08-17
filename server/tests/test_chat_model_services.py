@@ -11,7 +11,7 @@ from schemas.chat_model import ChatRequest, ChatMessage, ChatRole
 from models.conversation import Conversation
 from models.message import Message, SenderType
 from models.user import User
-from services.chat_model_services import get_conversation_from_request
+from services.chat_model_services import get_conversation_from_request, _generate_conversation_history
 
 
 class TestGetConversationFromRequest:
@@ -592,3 +592,232 @@ class TestGetConversationFromRequest:
         
         # Verify timestamps are in correct order
         assert messages[0].created_at < messages[1].created_at < messages[2].created_at
+
+
+class TestGenerateConversationHistory:
+    """Test the _generate_conversation_history function."""
+
+    def _create_test_conversation_with_messages(self, db_session: Session, messages_data: list) -> Conversation:
+        """Helper method to create a conversation with specified messages."""
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+
+        # Create a conversation
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt="Test prompt"
+        )
+
+        # Add messages to the conversation
+        for content, sender_type in messages_data:
+            message = Message(
+                conversation_id=conversation.id,
+                sent_by=sender_type,
+                content=content
+            )
+            db_session.add(message)
+        
+        db_session.commit()
+        db_session.refresh(conversation)
+        return conversation
+
+    def test_generate_conversation_history_with_mixed_messages(self, db_session: Session):
+        """Test conversation history generation with mixed user and assistant messages."""
+        messages_data = [
+            ("Hello, how are you today?", SenderType.USER),
+            ("I'm doing well, thank you! How can I help you?", SenderType.ASSISTANT),
+            ("Can you explain quantum computing?", SenderType.USER),
+            ("Quantum computing uses quantum mechanics principles...", SenderType.ASSISTANT),
+            ("That's interesting! Tell me more about qubits.", SenderType.USER),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Expected output
+        expected = (
+            "[Conversation History]\n"
+            "User: Hello, how are you today?\n"
+            "Assistant: I'm doing well, thank you! How can I help you?\n"
+            "User: Can you explain quantum computing?\n"
+            "Assistant: Quantum computing uses quantum mechanics principles...\n"
+            "User: That's interesting! Tell me more about qubits."
+        )
+        
+        assert result == expected
+
+    def test_generate_conversation_history_with_only_user_messages(self, db_session: Session):
+        """Test conversation history generation with only user messages."""
+        messages_data = [
+            ("First user message", SenderType.USER),
+            ("Second user message", SenderType.USER),
+            ("Third user message", SenderType.USER),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Expected output
+        expected = (
+            "[Conversation History]\n"
+            "User: First user message\n"
+            "User: Second user message\n"
+            "User: Third user message"
+        )
+        
+        assert result == expected
+
+    def test_generate_conversation_history_with_only_assistant_messages(self, db_session: Session):
+        """Test conversation history generation with only assistant messages."""
+        messages_data = [
+            ("First assistant response", SenderType.ASSISTANT),
+            ("Second assistant response", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Expected output
+        expected = (
+            "[Conversation History]\n"
+            "Assistant: First assistant response\n"
+            "Assistant: Second assistant response"
+        )
+        
+        assert result == expected
+
+    def test_generate_conversation_history_with_empty_messages(self, db_session: Session):
+        """Test conversation history generation with no messages."""
+        messages_data = []  # No messages
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Should return empty string when no messages
+        assert result == ""
+
+    def test_generate_conversation_history_with_single_message(self, db_session: Session):
+        """Test conversation history generation with a single message."""
+        messages_data = [
+            ("Single message from user", SenderType.USER),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Expected output
+        expected = (
+            "[Conversation History]\n"
+            "User: Single message from user"
+        )
+        
+        assert result == expected
+
+    def test_generate_conversation_history_with_special_characters(self, db_session: Session):
+        """Test conversation history generation with special characters and formatting."""
+        messages_data = [
+            ("Hello! 👋 How are you? @#$%^&*()", SenderType.USER),
+            ("I'm great! Here's some code: `print('Hello')` 🚀", SenderType.ASSISTANT),
+            ("What about newlines?\nAnd tabs?\tDo they work?", SenderType.USER),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Expected output - special characters should be preserved
+        expected = (
+            "[Conversation History]\n"
+            "User: Hello! 👋 How are you? @#$%^&*()\n"
+            "Assistant: I'm great! Here's some code: `print('Hello')` 🚀\n"
+            "User: What about newlines?\nAnd tabs?\tDo they work?"
+        )
+        
+        assert result == expected
+
+    def test_generate_conversation_history_preserves_message_order(self, db_session: Session):
+        """Test that conversation history preserves chronological message order."""
+        # This test relies on the fact that we've already tested message ordering
+        # in the get_conversation_from_request tests
+        messages_data = [
+            ("Message 1 - First", SenderType.USER),
+            ("Message 2 - Response to first", SenderType.ASSISTANT),
+            ("Message 3 - Follow up", SenderType.USER),
+            ("Message 4 - Final response", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Verify the order is preserved in the output
+        lines = result.split('\n')
+        assert lines[0] == "[Conversation History]"
+        assert lines[1] == "User: Message 1 - First"
+        assert lines[2] == "Assistant: Message 2 - Response to first"
+        assert lines[3] == "User: Message 3 - Follow up"
+        assert lines[4] == "Assistant: Message 4 - Final response"
+        
+        # Verify total line count
+        assert len(lines) == 5
+
+    def test_generate_conversation_history_with_long_messages(self, db_session: Session):
+        """Test conversation history generation with very long message content."""
+        long_message = "This is a very long message. " * 50  # 1500 characters
+        
+        messages_data = [
+            (long_message, SenderType.USER),
+            ("Short response", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Verify the long message is included in full
+        assert long_message in result
+        assert "User: " + long_message in result
+        assert "Assistant: Short response" in result
+        assert result.startswith("[Conversation History]\n")
+
+    def test_generate_conversation_history_with_empty_message_content(self, db_session: Session):
+        """Test conversation history generation with empty message content."""
+        messages_data = [
+            ("", SenderType.USER),  # Empty content
+            ("Response to empty message", SenderType.ASSISTANT),
+        ]
+        
+        conversation = self._create_test_conversation_with_messages(db_session, messages_data)
+        
+        # Call the function
+        result = _generate_conversation_history(conversation)
+        
+        # Expected output - empty content should still be formatted
+        expected = (
+            "[Conversation History]\n"
+            "User: \n"
+            "Assistant: Response to empty message"
+        )
+        
+        assert result == expected

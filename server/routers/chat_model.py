@@ -1,15 +1,13 @@
 import logging
-from cmd import PROMPT
 
 import chat_model_loader
 import services
+from config import settings
 from database import get_mysql_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from models import Conversation
 from schemas import ChatRequest, ChatResponse
 from sqlalchemy.orm import Session
-
-from server.config import chat_model_config
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat_model"])
@@ -31,7 +29,6 @@ async def chat_with_model(
         )
 
     try:
-        # TODO: enable thinking process and streaming it to the frontend.
         conversation = services.get_conversation_from_request(chat_request, db)
         complete_prompt = services.generate_prompt(
             conversation, chat_request.messages[0].content
@@ -46,7 +43,7 @@ async def chat_with_model(
         )
         inputs = tokenizer([text], return_tensors="pt").to(model.device)
         text_ids = model.generate(
-            **inputs, max_new_tokens=chat_model_config.MAX_NEW_TOKENS
+            **inputs, max_new_tokens=settings.chat_model["MAX_NEW_TOKENS"]
         )
 
         output_ids = text_ids[0][len(inputs.input_ids[0]) :].tolist()

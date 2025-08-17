@@ -25,5 +25,7 @@ class Settings:
             f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:3306/{self.DB_NAME}",
         )
 
+    chat_model = {"MAX_NEW_TOKENS": 100, "TRUST_REMOTE_CODE": True}
+
 
 settings = Settings()

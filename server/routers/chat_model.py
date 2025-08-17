@@ -5,7 +5,6 @@ import services
 from config import settings
 from database import get_mysql_db
 from fastapi import APIRouter, Depends, HTTPException, status
-from models import Conversation
 from schemas import ChatRequest, ChatResponse
 from sqlalchemy.orm import Session
 
@@ -33,7 +32,8 @@ async def chat_with_model(
         complete_prompt = services.generate_prompt(
             conversation, chat_request.messages[0].content
         )
-        # TODO: store user message
+
+        logger.info(f">>>>>>>> Complete prompt: {complete_prompt}")
 
         text = tokenizer.apply_chat_template(
             complete_prompt,
@@ -47,10 +47,15 @@ async def chat_with_model(
         )
 
         output_ids = text_ids[0][len(inputs.input_ids[0]) :].tolist()
-        content = tokenizer.decode(output_ids, skip_special_tokens=True).strip("\n")
+        response_message = tokenizer.decode(output_ids, skip_special_tokens=True).strip(
+            "\n"
+        )
 
-        # TODO: store assistant's message
-        return ChatResponse(messages=content)
+        services.store_request_and_response_messages(
+            db, conversation.id, chat_request.messages[0].content, response_message
+        )
+
+        return ChatResponse(messages=response_message)
 
     except Exception as e:
         logger.error(f"Error loading model: {e}")

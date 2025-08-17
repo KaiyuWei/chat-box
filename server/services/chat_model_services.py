@@ -1,3 +1,5 @@
+from time import sleep
+
 from models import Conversation, Message
 from models.conversation import SYSTEM_PROMPT_TYPE
 from models.message import SenderType
@@ -27,6 +29,15 @@ def get_conversation_from_request(
         conversation = Conversation.create_conversation(db, user_id, title, prompt)
 
     return conversation
+
+
+def store_request_and_response_messages(
+    db: Session, conversation_id: int, user_message: str, assistant_message: str
+):
+    """Store user and assistant messages in the database in one transaction."""
+
+    Message.create_message(db, conversation_id, SenderType.USER, user_message)
+    Message.create_message(db, conversation_id, SenderType.ASSISTANT, assistant_message)
 
 
 def generate_prompt(conversation: Conversation, new_message: str) -> list[dict]:

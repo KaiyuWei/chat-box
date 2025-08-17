@@ -2,6 +2,7 @@ from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
 from sqlalchemy import Enum
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
@@ -18,3 +19,4 @@ class Message(Base):
     content = Column(String(4000), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    conversation = relationship("Conversation", back_populates="messages")

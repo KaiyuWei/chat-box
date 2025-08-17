@@ -58,7 +58,7 @@ class TestCreateConversationFunction:
         assert db_conversation.prompt == prompt
 
     def test_create_conversation_with_empty_prompt(self, db_session: Session):
-        """Test creating conversation with empty prompt."""
+        """Test creating conversation with empty prompt gets default system prompt."""
         # Create a test user first
         test_user = User(
             username="testuser",
@@ -81,11 +81,11 @@ class TestCreateConversationFunction:
         )
 
         assert conversation is not None
-        assert conversation.prompt == ""
+        assert conversation.prompt == "You are a helpful and friendly assistant."
         assert conversation.title == title
 
     def test_create_conversation_with_null_prompt(self, db_session: Session):
-        """Test creating conversation with None prompt."""
+        """Test creating conversation with None prompt gets default system prompt."""
         # Create a test user first
         test_user = User(
             username="testuser",
@@ -107,7 +107,35 @@ class TestCreateConversationFunction:
         )
 
         assert conversation is not None
-        assert conversation.prompt is None
+        assert conversation.prompt == "You are a helpful and friendly assistant."
+        assert conversation.title == title
+
+    def test_create_conversation_with_custom_prompt_overrides_default(self, db_session: Session):
+        """Test that providing a custom prompt overrides the default system prompt."""
+        # Create a test user first
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        # Create conversation with custom prompt
+        title = "Test Conversation"
+        custom_prompt = "You are a specialized assistant for coding tasks."
+        
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title=title,
+            prompt=custom_prompt
+        )
+
+        assert conversation is not None
+        assert conversation.prompt == custom_prompt
+        assert conversation.prompt != "You are a helpful and friendly assistant."
         assert conversation.title == title
 
     def test_create_conversation_with_long_title(self, db_session: Session):
@@ -588,7 +616,7 @@ class TestConversationGetById:
         assert hasattr(retrieved, 'updated_at')
 
     def test_get_by_id_with_none_prompt(self, db_session: Session):
-        """Test get_by_id works with conversations that have None prompt."""
+        """Test get_by_id works with conversations that have None prompt (gets default)."""
         # Create a test user
         test_user = User(
             username="testuser",
@@ -599,7 +627,7 @@ class TestConversationGetById:
         db_session.commit()
         db_session.refresh(test_user)
 
-        # Create conversation with None prompt
+        # Create conversation with None prompt (gets default system prompt)
         conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
@@ -614,7 +642,7 @@ class TestConversationGetById:
         assert retrieved is not None
         assert retrieved.id == conversation.id
         assert retrieved.title == "Test Conversation"
-        assert retrieved.prompt is None
+        assert retrieved.prompt == "You are a helpful and friendly assistant."
 
     def test_get_by_id_with_special_characters(self, db_session: Session):
         """Test get_by_id works with conversations containing special characters."""

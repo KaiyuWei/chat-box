@@ -21,6 +21,19 @@ The model we are using is an any-to-any model. For now we only enable text-to-te
 
 Use session users to enable storing chat history and continous chat.
 
+### Add real user auth system
+
+Add pages for user reigister and login. For now use Dummy user with id 1.
+
+### Sliding window + Running summary
+
+For accelerating the processing, we should not query and send too many messages to the AI model all at once:
+
+- Keep only the last N messages verbatim (e.g., 12–30 turns).
+- Maintain a running summary of older content (update it whenever the convo exceeds a threshold).
+- Prompt = system + running_summary + last_N_messages (+ optional facts/memories).
+- Store the summary in your DB (you already have a conversation_summaries table above).
+
 ### Add test cases for endpoint chat_with_model
 
 #### Test File Location

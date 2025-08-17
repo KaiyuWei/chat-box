@@ -1,8 +1,10 @@
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
 from sqlalchemy.sql import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, relationship
 
 from .base import Base
+
+DEFAULT_SYSTEM_PROMPT = "You are a helpful and friendly assistant."
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -13,13 +15,14 @@ class Conversation(Base):
     prompt = Column(String(4000), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
     @classmethod
     def create_conversation(cls, db: Session, user_id: int, title: str, prompt: str) -> 'Conversation':
         new_conversation = cls(
             user_id=user_id,
             title=title,
-            prompt=prompt
+            prompt=prompt if prompt else DEFAULT_SYSTEM_PROMPT
         )
         db.add(new_conversation)
         db.commit()

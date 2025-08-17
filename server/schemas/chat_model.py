@@ -19,6 +19,9 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     conversation_id: int = Field(None, description="ID of the conversation")
+    prompt: str = Field(
+        None, description="Initial prompt for the conversation", max_length=4000
+    )
     messages: list[ChatMessage] = Field(
         ..., description="List of messages in the chat", min_length=1, max_length=10
     )

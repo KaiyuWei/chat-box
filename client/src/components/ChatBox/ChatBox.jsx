@@ -1,6 +1,7 @@
 import ReplyBox from "./ReplyBox";
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+import { ERROR_MESSAGES } from "../../utils/errorMessages";
 
 const ChatBox = ({
   selectedConversationId,
@@ -53,7 +54,7 @@ const ChatBox = ({
           setMessages([
             {
               id: "welcome",
-              text: "Hello! Welcome to the chat app. Start a new conversation!",
+              text: ERROR_MESSAGES.WELCOME,
               isUser: false,
               timestamp: new Date(),
             },
@@ -91,7 +92,7 @@ const ChatBox = ({
         setMessages([
           {
             id: "welcome",
-            text: "Hello! Welcome to the chat app. Start a new conversation!",
+            text: ERROR_MESSAGES.WELCOME,
             isUser: false,
             timestamp: new Date(),
           },
@@ -103,7 +104,7 @@ const ChatBox = ({
       setMessages([
         {
           id: "error",
-          text: "Sorry, there was an error loading your conversations. Please try refreshing the page.",
+          text: ERROR_MESSAGES.SERVER_LOADING,
           isUser: false,
           timestamp: new Date(),
         },
@@ -139,7 +140,7 @@ const ChatBox = ({
         setMessages([
           {
             id: "welcome",
-            text: "Hello! Welcome to the chat app. Start a new conversation!",
+            text: ERROR_MESSAGES.WELCOME,
             isUser: false,
             timestamp: new Date(),
           },

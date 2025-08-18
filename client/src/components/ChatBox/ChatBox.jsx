@@ -2,7 +2,7 @@ import ReplyBox from "./ReplyBox";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 
-const ChatBox = () => {
+const ChatBox = ({ selectedConversationId, onConversationChange }) => {
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
   const [userConversations, setUserConversations] = useState([]);
@@ -69,6 +69,9 @@ const ChatBox = () => {
       if (conversations.length > 0) {
         const latestConversation = conversations[conversations.length - 1];
         loadConversationMessages(latestConversation);
+
+        onConversationChange &&
+          onConversationChange(latestConversation.conversation_id);
       } else {
         setMessages([
           {
@@ -96,10 +99,6 @@ const ChatBox = () => {
   };
 
   const loadConversationMessages = (conversation) => {
-    console.log(
-      `Loading conversation: ${conversation.title} (ID: ${conversation.conversation_id})`
-    );
-
     setConversationId(conversation.conversation_id);
 
     const convertedMessages = conversation.messages.map((apiMessage) => ({
@@ -109,13 +108,23 @@ const ChatBox = () => {
       timestamp: new Date(apiMessage.created_at),
     }));
 
-    console.log(`Loaded ${convertedMessages.length} messages for conversation`);
     setMessages(convertedMessages);
   };
 
   useEffect(() => {
     fetchUserConversations();
   }, []);
+
+  useEffect(() => {
+    if (selectedConversationId && userConversations.length > 0) {
+      const selectedConversation = userConversations.find(
+        (conv) => conv.conversation_id === selectedConversationId
+      );
+      if (selectedConversation) {
+        loadConversationMessages(selectedConversation);
+      }
+    }
+  }, [selectedConversationId, userConversations]);
 
   const createMessage = (text, isUser, id = null) => {
     return {
@@ -136,8 +145,8 @@ const ChatBox = () => {
       ],
     };
 
-    if (conversationId) {
-      chatRequest.conversation_id = conversationId;
+    if (selectedConversationId) {
+      chatRequest.conversation_id = selectedConversationId;
     }
 
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -158,6 +167,7 @@ const ChatBox = () => {
 
   const handleNewConversation = (responseConversationId, userMessage) => {
     setConversationId(responseConversationId);
+    onConversationChange && onConversationChange(responseConversationId);
   };
 
   const handleAssistantResponse = (chatResponse) => {
@@ -179,7 +189,7 @@ const ChatBox = () => {
 
       const responseConversationId = chatResponse.conversation_id;
 
-      if (!conversationId && responseConversationId) {
+      if (!selectedConversationId && responseConversationId) {
         handleNewConversation(responseConversationId, userMessage);
       }
 
@@ -195,12 +205,12 @@ const ChatBox = () => {
   return (
     <div className="flex-1 flex flex-col bg-chat-background h-full w-full">
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 w-full">
-        {conversationId && (
+        {selectedConversationId && (
           <div className="text-xs text-gray-500 text-center mb-2 bg-gray-100 p-2 rounded">
-            Active Conversation ID: {conversationId}
+            Active Conversation ID: {selectedConversationId}
             <button
               onClick={() => {
-                setConversationId(null);
+                onConversationChange && onConversationChange(null);
                 setMessages([
                   {
                     id: "welcome",
@@ -249,7 +259,9 @@ const ChatBox = () => {
               <div className="flex justify-start">
                 <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-message-other text-message-other-foreground text-left">
                   <div className="text-left prose prose-sm max-w-none">
-                    <span className="italic text-gray-500">I'm thinking about it...</span>
+                    <span className="italic text-gray-500">
+                      I'm thinking about it...
+                    </span>
                   </div>
                 </div>
               </div>

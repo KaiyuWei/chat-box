@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ConversationTab from "./ConversationTab";
 
-const ChatSidebar = () => {
+const ChatSidebar = ({ selectedConversationId, onConversationSelect }) => {
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -80,10 +80,10 @@ const ChatSidebar = () => {
               <ConversationTab
                 key={conversation.conversation_id}
                 conversation={conversation}
-                onClick={(conv) => {
-                  // TODO: Add conversation switching logic here
-                  console.log("Clicked conversation:", conv.title);
-                }}
+                isActive={
+                  conversation.conversation_id === selectedConversationId
+                }
+                onClick={onConversationSelect}
               />
             ))}
           </div>

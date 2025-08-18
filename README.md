@@ -27,6 +27,12 @@ Use session users to enable storing chat history and continous chat.
 
 ## Multi-media support
 
+## button and endpoint for deleting a conversation
+
+## length limitation of generated token for local deployment
+
+## message bubbles layout: do not make them to the two sides.
+
 ## When user click the send button, the button should turn to a "stop" button for terminating the process.
 
 ## Add real user auth system

@@ -7,6 +7,7 @@ const ChatSidebar = ({
   selectedConversationId,
   onConversationSelect,
   onNewConversation,
+  onCloseTempConversation,
   refreshTrigger,
   tempConversation,
   isProcessing,
@@ -105,6 +106,7 @@ const ChatSidebar = ({
                   tempConversation.conversation_id === selectedConversationId
                 }
                 onClick={isProcessing ? null : onConversationSelect}
+                onClose={onCloseTempConversation}
                 disabled={isProcessing}
               />
             )}
@@ -116,8 +118,8 @@ const ChatSidebar = ({
                 isActive={
                   conversation.conversation_id === selectedConversationId
                 }
-                onClick={isProcessing ? null : onConversationSelect}
-                disabled={isProcessing}
+                onClick={isProcessing || tempConversation ? null : onConversationSelect}
+                disabled={isProcessing || !!tempConversation}
               />
             ))}
           </div>

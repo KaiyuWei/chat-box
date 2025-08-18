@@ -42,6 +42,31 @@ const ChatPage = () => {
     setSelectedConversationId(newConversationId);
   };
 
+  const handleCloseTempConversation = async () => {
+    setTempConversation(null);
+    
+    // Activate the first regular conversation if available
+    try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      const userId = 1; // TODO: replace with actual user ID when auth system is added
+      const response = await fetch(`${apiBaseUrl}/api/user-conv-with-msg/${userId}`);
+      if (response.ok) {
+        const conversations = await response.json();
+        if (conversations.length > 0) {
+          const firstConversation = conversations[conversations.length - 1]; // Latest conversation
+          setSelectedConversationId(firstConversation.conversation_id);
+          // Trigger sidebar refresh to ensure it has the latest conversations
+          setRefreshSidebar((prev) => prev + 1);
+        } else {
+          setSelectedConversationId(null);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching conversations after closing temp:", error);
+      setSelectedConversationId(null);
+    }
+  };
+
   const handleNoConversationsFound = () => {
     // Clear localStorage when user has no conversations
     // This handles cases where the user was deleted/reset but localStorage still has old data
@@ -87,6 +112,7 @@ const ChatPage = () => {
           selectedConversationId={selectedConversationId}
           onConversationSelect={handleConversationSelect}
           onNewConversation={handleNewConversation}
+          onCloseTempConversation={handleCloseTempConversation}
           refreshTrigger={refreshSidebar}
           tempConversation={tempConversation}
           isProcessing={isProcessing}

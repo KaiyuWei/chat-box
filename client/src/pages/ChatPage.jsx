@@ -9,7 +9,6 @@ const ChatPage = () => {
   const [tempConversation, setTempConversation] = useState(null);
 
   const handleConversationSelect = (conversation) => {
-    console.log("Switching to conversation:", conversation.title);
     setSelectedConversationId(conversation.conversation_id);
   };
 

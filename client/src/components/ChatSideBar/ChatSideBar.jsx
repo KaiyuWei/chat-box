@@ -25,8 +25,6 @@ const ChatSidebar = ({
       const userId = getCurrentUserId();
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
-      console.log(`Fetching conversations for sidebar, user ID: ${userId}`);
-
       const response = await fetch(
         `${apiBaseUrl}/api/user-conv-with-msg/${userId}`,
         {
@@ -47,10 +45,6 @@ const ChatSidebar = ({
       }
 
       const userConversations = await response.json();
-      console.log(
-        "Sidebar conversations fetched successfully:",
-        userConversations
-      );
 
       // Sort conversations with latest on top (reverse order)
       const sortedConversations = [...userConversations].reverse();

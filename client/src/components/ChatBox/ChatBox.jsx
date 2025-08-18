@@ -1,5 +1,5 @@
 import ReplyBox from "./ReplyBox";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 
 const ChatBox = ({
@@ -12,6 +12,7 @@ const ChatBox = ({
   const [userConversations, setUserConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isThinking, setIsThinking] = useState(false);
+  const messagesEndRef = useRef(null);
 
   // Dummy function to get current user id
   // TODO: remove this after an auth system is added
@@ -19,13 +20,16 @@ const ChatBox = ({
     return 1;
   };
 
+  // Function to scroll to bottom of messages
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const fetchUserConversations = async () => {
     try {
       setIsLoading(true);
       const userId = getCurrentUserId();
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-
-      console.log(`Fetching conversations for user ID: ${userId}`);
 
       const response = await fetch(
         `${apiBaseUrl}/api/user-conv-with-msg/${userId}`,
@@ -55,17 +59,6 @@ const ChatBox = ({
       }
 
       const conversations = await response.json();
-      console.log("User conversations fetched successfully:", conversations);
-      console.log(`Total conversations found: ${conversations.length}`);
-
-      conversations.forEach((conv, index) => {
-        console.log(`Conversation ${index + 1}:`, {
-          id: conv.conversation_id,
-          title: conv.title,
-          messageCount: conv.messages.length,
-          createdAt: conv.created_at,
-        });
-      });
 
       setUserConversations(conversations);
 
@@ -173,6 +166,11 @@ const ChatBox = ({
       setConversationId(null);
     }
   }, [selectedConversationId, userConversations]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const createMessage = (text, isUser, id = null) => {
     return {
@@ -311,6 +309,8 @@ const ChatBox = ({
                 </div>
               </div>
             )}
+            {/* Element to scroll to */}
+            <div ref={messagesEndRef} />
           </>
         )}
       </div>

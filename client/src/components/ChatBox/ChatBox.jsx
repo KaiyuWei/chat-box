@@ -304,10 +304,15 @@ const ChatBox = ({
             ))}
             {isThinking && (
               <div className="flex justify-start">
-                <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-message-other text-message-other-foreground text-left">
+                <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-message-other text-message-other-foreground text-left animate-pulse">
                   <div className="text-left prose prose-sm max-w-none">
-                    <span className="italic text-gray-500">
-                      I'm thinking about it...
+                    <span className="italic text-gray-500 flex items-center">
+                      I'm thinking about it
+                      <span className="ml-1 flex">
+                        <span className="animate-bounce" style={{animationDelay: '0ms'}}>.</span>
+                        <span className="animate-bounce" style={{animationDelay: '150ms'}}>.</span>
+                        <span className="animate-bounce" style={{animationDelay: '300ms'}}>.</span>
+                      </span>
                     </span>
                   </div>
                 </div>

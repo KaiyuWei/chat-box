@@ -1,5 +1,5 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import Session, relationship
+from sqlalchemy.orm import Session, joinedload, relationship
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -41,5 +41,12 @@ class Conversation(Base):
         return new_conversation
 
     @classmethod
-    def get_by_id(cls, db: Session, conversation_id: int) -> "Conversation":
-        return db.query(cls).filter(cls.id == conversation_id).first()
+    def get_by_id(
+        cls, db: Session, conversation_id: int, with_messages: bool = False
+    ) -> "Conversation":
+        query = db.query(Conversation)
+        if with_messages:
+            query = query.options(joinedload(Conversation.messages))
+
+        conversation = query.filter(Conversation.id == conversation_id).first()
+        return conversation

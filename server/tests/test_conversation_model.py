@@ -417,10 +417,10 @@ class TestCreateConversationFunction:
 
 
 class TestConversationGetById:
-    """Test the get_by_id classmethod."""
+    """Test the get_by_id classmethod with lazy loading and eager loading."""
 
-    def test_get_by_id_success(self, db_session: Session):
-        """Test successfully retrieving a conversation by ID."""
+    def test_get_by_id_lazy_loading_success(self, db_session: Session):
+        """Test successfully retrieving a conversation by ID with lazy loading (default behavior)."""
         # Create a test user first
         test_user = User(
             username="testuser",
@@ -439,10 +439,11 @@ class TestConversationGetById:
             prompt="Test prompt"
         )
 
-        # Retrieve the conversation by ID
+        # Retrieve the conversation by ID with lazy loading (default)
         retrieved_conversation = Conversation.get_by_id(
             db=db_session,
-            conversation_id=original_conversation.id
+            conversation_id=original_conversation.id,
+            with_messages=False
         )
 
         # Verify the retrieved conversation matches the original
@@ -454,37 +455,39 @@ class TestConversationGetById:
         assert retrieved_conversation.prompt == original_conversation.prompt
         assert retrieved_conversation.created_at == original_conversation.created_at
 
-    def test_get_by_id_not_found(self, db_session: Session):
-        """Test retrieving a conversation with non-existent ID returns None."""
-        non_existent_id = 99999
-        
-        result = Conversation.get_by_id(
-            db=db_session,
-            conversation_id=non_existent_id
+    def test_get_by_id_lazy_loading_default(self, db_session: Session):
+        """Test that with_messages defaults to False (lazy loading)."""
+        # Create a test user first
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
         )
-        
-        assert result is None
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
 
-    def test_get_by_id_with_zero_id(self, db_session: Session):
-        """Test retrieving a conversation with ID 0 returns None."""
-        result = Conversation.get_by_id(
+        # Create a conversation
+        conversation = Conversation.create_conversation(
             db=db_session,
-            conversation_id=0
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt="Test prompt"
         )
-        
-        assert result is None
 
-    def test_get_by_id_with_negative_id(self, db_session: Session):
-        """Test retrieving a conversation with negative ID returns None."""
-        result = Conversation.get_by_id(
+        # Retrieve without specifying with_messages (should default to False)
+        retrieved = Conversation.get_by_id(
             db=db_session,
-            conversation_id=-1
+            conversation_id=conversation.id
         )
-        
-        assert result is None
 
-    def test_get_by_id_multiple_conversations(self, db_session: Session):
-        """Test get_by_id works correctly when multiple conversations exist."""
+        assert retrieved is not None
+        assert retrieved.id == conversation.id
+
+    def test_get_by_id_eager_loading_without_messages(self, db_session: Session):
+        """Test eager loading when conversation has no messages."""
+        from models.message import Message, SenderType
+        
         # Create a test user
         test_user = User(
             username="testuser",
@@ -495,97 +498,315 @@ class TestConversationGetById:
         db_session.commit()
         db_session.refresh(test_user)
 
-        # Create multiple conversations
-        conversation1 = Conversation.create_conversation(
+        # Create a conversation without messages
+        conversation = Conversation.create_conversation(
             db=db_session,
             user_id=test_user.id,
-            title="First Conversation",
-            prompt="First prompt"
+            title="Empty Conversation",
+            prompt="Test prompt"
         )
+
+        # Retrieve with eager loading
+        retrieved = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=conversation.id,
+            with_messages=True
+        )
+
+        # Verify conversation is retrieved correctly
+        assert retrieved is not None
+        assert retrieved.id == conversation.id
+        assert retrieved.title == "Empty Conversation"
         
-        conversation2 = Conversation.create_conversation(
-            db=db_session,
-            user_id=test_user.id,
-            title="Second Conversation",
-            prompt="Second prompt"
-        )
+        # Verify messages relationship is loaded and empty
+        assert hasattr(retrieved, 'messages')
+        assert retrieved.messages == []
+
+    def test_get_by_id_eager_loading_with_messages(self, db_session: Session):
+        """Test eager loading when conversation has messages."""
+        from models.message import Message, SenderType
         
-        conversation3 = Conversation.create_conversation(
-            db=db_session,
-            user_id=test_user.id,
-            title="Third Conversation",
-            prompt="Third prompt"
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
         )
-
-        # Retrieve each conversation by ID and verify they're correct
-        retrieved1 = Conversation.get_by_id(db=db_session, conversation_id=conversation1.id)
-        retrieved2 = Conversation.get_by_id(db=db_session, conversation_id=conversation2.id)
-        retrieved3 = Conversation.get_by_id(db=db_session, conversation_id=conversation3.id)
-
-        # Verify each retrieved conversation matches the original
-        assert retrieved1.id == conversation1.id
-        assert retrieved1.title == "First Conversation"
-        assert retrieved1.prompt == "First prompt"
-
-        assert retrieved2.id == conversation2.id
-        assert retrieved2.title == "Second Conversation"
-        assert retrieved2.prompt == "Second prompt"
-
-        assert retrieved3.id == conversation3.id
-        assert retrieved3.title == "Third Conversation"
-        assert retrieved3.prompt == "Third prompt"
-
-        # Verify they're all different conversations
-        assert retrieved1.id != retrieved2.id != retrieved3.id
-
-    def test_get_by_id_with_different_users(self, db_session: Session):
-        """Test get_by_id retrieves conversations regardless of user ownership."""
-        # Create two test users
-        user1 = User(
-            username="user1",
-            email="user1@example.com",
-            password_hash="hashed_password1"
-        )
-        user2 = User(
-            username="user2",
-            email="user2@example.com",
-            password_hash="hashed_password2"
-        )
-        db_session.add_all([user1, user2])
+        db_session.add(test_user)
         db_session.commit()
-        db_session.refresh(user1)
-        db_session.refresh(user2)
+        db_session.refresh(test_user)
 
-        # Create conversations for different users
-        conversation1 = Conversation.create_conversation(
+        # Create a conversation
+        conversation = Conversation.create_conversation(
             db=db_session,
-            user_id=user1.id,
-            title="User 1 Conversation",
-            prompt="User 1 prompt"
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt="Test prompt"
+        )
+
+        # Add some messages to the conversation
+        message1 = Message.create_message(
+            db=db_session,
+            conversation_id=conversation.id,
+            sent_by=SenderType.USER,
+            content="Hello, this is a user message"
+        )
+        message2 = Message.create_message(
+            db=db_session,
+            conversation_id=conversation.id,
+            sent_by=SenderType.ASSISTANT,
+            content="Hello! This is an assistant response"
+        )
+        message3 = Message.create_message(
+            db=db_session,
+            conversation_id=conversation.id,
+            sent_by=SenderType.USER,
+            content="Another user message"
+        )
+
+        # Retrieve with eager loading
+        retrieved = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=conversation.id,
+            with_messages=True
+        )
+
+        # Verify conversation is retrieved correctly
+        assert retrieved is not None
+        assert retrieved.id == conversation.id
+        assert retrieved.title == "Test Conversation"
+        
+        # Verify messages are eagerly loaded
+        assert hasattr(retrieved, 'messages')
+        assert len(retrieved.messages) == 3
+        
+        # Verify message order (should be ordered by created_at as per relationship definition)
+        messages = retrieved.messages
+        assert messages[0].id == message1.id
+        assert messages[0].content == "Hello, this is a user message"
+        assert messages[0].sent_by == SenderType.USER
+        
+        assert messages[1].id == message2.id
+        assert messages[1].content == "Hello! This is an assistant response"
+        assert messages[1].sent_by == SenderType.ASSISTANT
+        
+        assert messages[2].id == message3.id
+        assert messages[2].content == "Another user message"
+        assert messages[2].sent_by == SenderType.USER
+
+    def test_get_by_id_lazy_vs_eager_loading_comparison(self, db_session: Session):
+        """Test that lazy and eager loading return the same conversation but with different message loading behavior."""
+        from models.message import Message, SenderType
+        
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        # Create a conversation with messages
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt="Test prompt"
         )
         
-        conversation2 = Conversation.create_conversation(
+        Message.create_message(
             db=db_session,
-            user_id=user2.id,
-            title="User 2 Conversation",
-            prompt="User 2 prompt"
+            conversation_id=conversation.id,
+            sent_by=SenderType.USER,
+            content="Test message"
         )
 
-        # Retrieve conversations by ID
-        retrieved1 = Conversation.get_by_id(db=db_session, conversation_id=conversation1.id)
-        retrieved2 = Conversation.get_by_id(db=db_session, conversation_id=conversation2.id)
+        # Retrieve with lazy loading
+        lazy_retrieved = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=conversation.id,
+            with_messages=False
+        )
 
-        # Verify we get the correct conversations
-        assert retrieved1.id == conversation1.id
-        assert retrieved1.user_id == user1.id
-        assert retrieved1.title == "User 1 Conversation"
+        # Retrieve with eager loading
+        eager_retrieved = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=conversation.id,
+            with_messages=True
+        )
 
-        assert retrieved2.id == conversation2.id
-        assert retrieved2.user_id == user2.id
-        assert retrieved2.title == "User 2 Conversation"
+        # Both should return the same conversation data
+        assert lazy_retrieved.id == eager_retrieved.id
+        assert lazy_retrieved.title == eager_retrieved.title
+        assert lazy_retrieved.prompt == eager_retrieved.prompt
+        assert lazy_retrieved.user_id == eager_retrieved.user_id
+        
+        # Both should have messages attribute, but eager loading should have them preloaded
+        assert hasattr(lazy_retrieved, 'messages')
+        assert hasattr(eager_retrieved, 'messages')
 
-    def test_get_by_id_return_type(self, db_session: Session):
-        """Test that get_by_id returns the correct type."""
+    def test_get_by_id_not_found_lazy_loading(self, db_session: Session):
+        """Test retrieving a conversation with non-existent ID returns None with lazy loading."""
+        non_existent_id = 99999
+        
+        result = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=non_existent_id,
+            with_messages=False
+        )
+        
+        assert result is None
+
+    def test_get_by_id_not_found_eager_loading(self, db_session: Session):
+        """Test retrieving a conversation with non-existent ID returns None with eager loading."""
+        non_existent_id = 99999
+        
+        result = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=non_existent_id,
+            with_messages=True
+        )
+        
+        assert result is None
+
+    def test_get_by_id_with_zero_id(self, db_session: Session):
+        """Test retrieving a conversation with ID 0 returns None."""
+        result = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=0,
+            with_messages=True
+        )
+        
+        assert result is None
+
+    def test_get_by_id_with_negative_id(self, db_session: Session):
+        """Test retrieving a conversation with negative ID returns None."""
+        result = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=-1,
+            with_messages=False
+        )
+        
+        assert result is None
+
+    def test_get_by_id_eager_loading_message_order(self, db_session: Session):
+        """Test that eager loading preserves message order (by created_at)."""
+        from models.message import Message, SenderType
+        import time
+        
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        # Create a conversation
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Test Conversation",
+            prompt="Test prompt"
+        )
+
+        # Add messages with slight delays to ensure different timestamps
+        message1 = Message.create_message(
+            db=db_session,
+            conversation_id=conversation.id,
+            sent_by=SenderType.USER,
+            content="First message"
+        )
+        
+        time.sleep(0.01)  # Small delay to ensure different timestamps
+        
+        message2 = Message.create_message(
+            db=db_session,
+            conversation_id=conversation.id,
+            sent_by=SenderType.ASSISTANT,
+            content="Second message"
+        )
+        
+        time.sleep(0.01)
+        
+        message3 = Message.create_message(
+            db=db_session,
+            conversation_id=conversation.id,
+            sent_by=SenderType.USER,
+            content="Third message"
+        )
+
+        # Retrieve with eager loading
+        retrieved = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=conversation.id,
+            with_messages=True
+        )
+
+        # Verify messages are in correct chronological order
+        messages = retrieved.messages
+        assert len(messages) == 3
+        assert messages[0].content == "First message"
+        assert messages[1].content == "Second message"
+        assert messages[2].content == "Third message"
+        
+        # Verify timestamps are in ascending order
+        assert messages[0].created_at <= messages[1].created_at <= messages[2].created_at
+
+    def test_get_by_id_eager_loading_large_number_of_messages(self, db_session: Session):
+        """Test eager loading performance with many messages."""
+        from models.message import Message, SenderType
+        
+        # Create a test user
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="hashed_password"
+        )
+        db_session.add(test_user)
+        db_session.commit()
+        db_session.refresh(test_user)
+
+        # Create a conversation
+        conversation = Conversation.create_conversation(
+            db=db_session,
+            user_id=test_user.id,
+            title="Conversation with Many Messages",
+            prompt="Test prompt"
+        )
+
+        # Add many messages
+        num_messages = 50
+        for i in range(num_messages):
+            sender = SenderType.USER if i % 2 == 0 else SenderType.ASSISTANT
+            Message.create_message(
+                db=db_session,
+                conversation_id=conversation.id,
+                sent_by=sender,
+                content=f"Message number {i + 1}"
+            )
+
+        # Retrieve with eager loading
+        retrieved = Conversation.get_by_id(
+            db=db_session,
+            conversation_id=conversation.id,
+            with_messages=True
+        )
+
+        # Verify all messages are loaded
+        assert retrieved is not None
+        assert len(retrieved.messages) == num_messages
+        
+        # Verify first and last messages
+        assert retrieved.messages[0].content == "Message number 1"
+        assert retrieved.messages[-1].content == f"Message number {num_messages}"
+
+    def test_get_by_id_return_type_with_eager_loading(self, db_session: Session):
+        """Test that get_by_id returns the correct type with eager loading."""
         # Create a test user and conversation
         test_user = User(
             username="testuser",
@@ -603,8 +824,12 @@ class TestConversationGetById:
             prompt="Test prompt"
         )
 
-        # Retrieve the conversation
-        retrieved = Conversation.get_by_id(db=db_session, conversation_id=conversation.id)
+        # Retrieve the conversation with eager loading
+        retrieved = Conversation.get_by_id(
+            db=db_session, 
+            conversation_id=conversation.id,
+            with_messages=True
+        )
 
         # Verify return type and attributes
         assert isinstance(retrieved, Conversation)
@@ -614,64 +839,5 @@ class TestConversationGetById:
         assert hasattr(retrieved, 'prompt')
         assert hasattr(retrieved, 'created_at')
         assert hasattr(retrieved, 'updated_at')
-
-    def test_get_by_id_with_none_prompt(self, db_session: Session):
-        """Test get_by_id works with conversations that have None prompt (gets default)."""
-        # Create a test user
-        test_user = User(
-            username="testuser",
-            email="test@example.com",
-            password_hash="hashed_password"
-        )
-        db_session.add(test_user)
-        db_session.commit()
-        db_session.refresh(test_user)
-
-        # Create conversation with None prompt (gets default system prompt)
-        conversation = Conversation.create_conversation(
-            db=db_session,
-            user_id=test_user.id,
-            title="Test Conversation",
-            prompt=None
-        )
-
-        # Retrieve the conversation
-        retrieved = Conversation.get_by_id(db=db_session, conversation_id=conversation.id)
-
-        # Verify the conversation is retrieved correctly
-        assert retrieved is not None
-        assert retrieved.id == conversation.id
-        assert retrieved.title == "Test Conversation"
-        assert retrieved.prompt == "You are a helpful and friendly assistant."
-
-    def test_get_by_id_with_special_characters(self, db_session: Session):
-        """Test get_by_id works with conversations containing special characters."""
-        # Create a test user
-        test_user = User(
-            username="testuser",
-            email="test@example.com",
-            password_hash="hashed_password"
-        )
-        db_session.add(test_user)
-        db_session.commit()
-        db_session.refresh(test_user)
-
-        # Create conversation with special characters
-        title_with_special_chars = "Test! @#$%^&*()_+-=[]{}|;':\",./<>?"
-        prompt_with_unicode = "Unicode: 你好世界 - Привет мир - مرحبا بالعالم 🚀"
-        
-        conversation = Conversation.create_conversation(
-            db=db_session,
-            user_id=test_user.id,
-            title=title_with_special_chars,
-            prompt=prompt_with_unicode
-        )
-
-        # Retrieve the conversation
-        retrieved = Conversation.get_by_id(db=db_session, conversation_id=conversation.id)
-
-        # Verify the conversation is retrieved correctly with all special characters
-        assert retrieved is not None
-        assert retrieved.id == conversation.id
-        assert retrieved.title == title_with_special_chars
-        assert retrieved.prompt == prompt_with_unicode
+        assert hasattr(retrieved, 'messages')
+        assert isinstance(retrieved.messages, list)

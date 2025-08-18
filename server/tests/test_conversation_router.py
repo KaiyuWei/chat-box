@@ -95,11 +95,11 @@ def sample_conversation_with_messages(db_session, sample_conversation):
 
 
 class TestGetConversation:
-    """Test cases for the GET /api/conversation/{conversation_id} endpoint."""
+    """Test cases for the GET /api/conversation-with-message/{conversation_id} endpoint."""
 
     def test_get_conversation_success_without_messages(self, client_with_conversation, sample_conversation):
         """Test successfully retrieving a conversation without messages."""
-        response = client_with_conversation.get(f"/api/conversation/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -115,7 +115,7 @@ class TestGetConversation:
         """Test successfully retrieving a conversation with messages."""
         conversation, messages = sample_conversation_with_messages
         
-        response = client_with_conversation.get(f"/api/conversation/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -147,7 +147,7 @@ class TestGetConversation:
         """Test retrieving a non-existent conversation returns 404."""
         non_existent_id = 99999
         
-        response = client_with_conversation.get(f"/api/conversation/{non_existent_id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{non_existent_id}")
         
         assert response.status_code == 404
         data = response.json()
@@ -155,7 +155,7 @@ class TestGetConversation:
 
     def test_get_conversation_with_zero_id(self, client_with_conversation):
         """Test retrieving conversation with ID 0 returns 404."""
-        response = client_with_conversation.get("/api/conversation/0")
+        response = client_with_conversation.get("/api/conversation-with-message/0")
         
         assert response.status_code == 404
         data = response.json()
@@ -163,7 +163,7 @@ class TestGetConversation:
 
     def test_get_conversation_with_negative_id(self, client_with_conversation):
         """Test retrieving conversation with negative ID returns 404."""
-        response = client_with_conversation.get("/api/conversation/-1")
+        response = client_with_conversation.get("/api/conversation-with-message/-1")
         
         assert response.status_code == 404
         data = response.json()
@@ -171,7 +171,7 @@ class TestGetConversation:
 
     def test_get_conversation_invalid_id_format(self, client_with_conversation):
         """Test retrieving conversation with invalid ID format returns 422."""
-        response = client_with_conversation.get("/api/conversation/invalid")
+        response = client_with_conversation.get("/api/conversation-with-message/invalid")
         
         assert response.status_code == 422
         data = response.json()
@@ -181,7 +181,7 @@ class TestGetConversation:
         """Test that the response format matches the expected schema."""
         conversation, messages = sample_conversation_with_messages
         
-        response = client_with_conversation.get(f"/api/conversation/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -204,7 +204,7 @@ class TestGetConversation:
         """Test that datetime fields are properly formatted as ISO strings."""
         conversation, messages = sample_conversation_with_messages
         
-        response = client_with_conversation.get(f"/api/conversation/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -251,7 +251,7 @@ class TestGetConversation:
             content="Third message"
         )
         
-        response = client_with_conversation.get(f"/api/conversation/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -275,7 +275,7 @@ class TestGetConversation:
                 content=f"Message number {i + 1}"
             )
         
-        response = client_with_conversation.get(f"/api/conversation/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -305,7 +305,7 @@ class TestGetConversation:
             content="Special chars: émojis 🚀 and unicode: αβγδε"
         )
         
-        response = client_with_conversation.get(f"/api/conversation/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -325,7 +325,7 @@ class TestGetConversation:
             prompt=None
         )
         
-        response = client_with_conversation.get(f"/api/conversation/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -345,7 +345,7 @@ class TestGetConversation:
             )
         
         # The endpoint should work efficiently with eager loading
-        response = client_with_conversation.get(f"/api/conversation/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -353,7 +353,7 @@ class TestGetConversation:
 
     def test_get_conversation_response_content_type(self, client_with_conversation, sample_conversation):
         """Test that response has correct content type."""
-        response = client_with_conversation.get(f"/api/conversation/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
         
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/json"

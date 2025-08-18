@@ -142,6 +142,7 @@ alembic revision --autogenerate -m "description"
 
 ### 🎯 Core Functionality
 - **Real-time Chat Interface** - Smooth messaging experience with typing indicators
+- **Continuous Conversations** - AI maintains context across multiple messages within each conversation
 - **Conversation Management** - Create, switch, and organize multiple conversations
 - **AI Integration** - Local AI model with intelligent responses
 - **Persistent Storage** - Conversation history saved across sessions

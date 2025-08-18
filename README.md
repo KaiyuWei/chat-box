@@ -201,6 +201,7 @@ alembic revision --autogenerate -m "description"
 
 ### User Experience Enhancements
 - **Multiple Model Selection**: Add user interface to switch between different AI models (e.g., lightweight models for speed vs. larger models for quality) allowing users to choose the best model for their specific use case
+- **Responsive Design**: Optimize UI for different devices including desktop, tablets, and mobile phones with self-adjusting layouts and touch-friendly interfaces
 - **Message Layout Redesign**: Move away from left/right bubble layout to a more modern centered approach
 - **Turn down token Length Limits**: For local deployments, I limited the response length (can be configured in MAX_NEW_TOKENS in `server/config.js`) for faster response.
 - **Thinking Process Visualization**: Stream and display AI reasoning process

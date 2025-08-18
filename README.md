@@ -25,6 +25,8 @@ Use session users to enable storing chat history and continous chat.
 
 ## Improve the coding style, try to write shorter function.
 
+## Multi-media support
+
 ## When user click the send button, the button should turn to a "stop" button for terminating the process.
 
 ## Add real user auth system

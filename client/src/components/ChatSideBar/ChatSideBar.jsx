@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ConversationTab from "./ConversationTab";
 
 const ChatSidebar = () => {
   const [conversations, setConversations] = useState([]);
@@ -38,12 +39,14 @@ const ChatSidebar = () => {
       }
 
       const userConversations = await response.json();
-      console.log("Sidebar conversations fetched successfully:", userConversations);
+      console.log(
+        "Sidebar conversations fetched successfully:",
+        userConversations
+      );
 
       // Sort conversations with latest on top (reverse order)
       const sortedConversations = [...userConversations].reverse();
       setConversations(sortedConversations);
-
     } catch (error) {
       console.error("Error fetching conversations for sidebar:", error);
       setConversations([]);
@@ -65,20 +68,23 @@ const ChatSidebar = () => {
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="w-full h-8 bg-gray-300 rounded animate-pulse"></div>
+              <div
+                key={i}
+                className="w-full h-8 bg-gray-300 rounded animate-pulse"
+              ></div>
             ))}
           </div>
         ) : conversations.length > 0 ? (
           <div className="space-y-2">
             {conversations.map((conversation) => (
-              <div
+              <ConversationTab
                 key={conversation.conversation_id}
-                className="w-full p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <div className="text-sm font-medium text-gray-800 truncate">
-                  {conversation.title}
-                </div>
-              </div>
+                conversation={conversation}
+                onClick={(conv) => {
+                  // TODO: Add conversation switching logic here
+                  console.log("Clicked conversation:", conv.title);
+                }}
+              />
             ))}
           </div>
         ) : (

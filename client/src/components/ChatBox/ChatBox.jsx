@@ -208,22 +208,6 @@ const ChatBox = ({ selectedConversationId, onConversationChange }) => {
         {selectedConversationId && (
           <div className="text-xs text-gray-500 text-center mb-2 bg-gray-100 p-2 rounded">
             Active Conversation ID: {selectedConversationId}
-            <button
-              onClick={() => {
-                onConversationChange && onConversationChange(null);
-                setMessages([
-                  {
-                    id: "welcome",
-                    text: "Hello! Welcome to the chat app. Start a new conversation!",
-                    isUser: false,
-                    timestamp: new Date(),
-                  },
-                ]);
-              }}
-              className="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-            >
-              New Conversation
-            </button>
           </div>
         )}
         {isLoading ? (

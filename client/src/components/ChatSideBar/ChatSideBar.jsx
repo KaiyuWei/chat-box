@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import ConversationTab from "./ConversationTab";
+import IconButton from "../ui/icon-button";
+import { PlusIcon } from "../ui/icons";
 
 const ChatSidebar = ({ selectedConversationId, onConversationSelect }) => {
   const [conversations, setConversations] = useState([]);
@@ -61,8 +63,18 @@ const ChatSidebar = ({ selectedConversationId, onConversationSelect }) => {
 
   return (
     <div className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-800">Conversations</h2>
+        <IconButton
+          variant="default"
+          size="sm"
+          onClick={() => {
+            // TODO: Add new conversation logic here
+            console.log("New conversation clicked");
+          }}
+        >
+          <PlusIcon size={14} />
+        </IconButton>
       </div>
       <div className="flex-1 p-4 overflow-y-auto">
         {isLoading ? (

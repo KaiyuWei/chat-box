@@ -48,7 +48,6 @@ const ChatPage = () => {
     console.log("No conversations found for user, clearing localStorage");
     try {
       localStorage.removeItem(STORAGE_KEY);
-      
 
       const tempConversationId = `temp_welcome_${Date.now()}`;
       const welcomeConversation = {
@@ -57,7 +56,7 @@ const ChatPage = () => {
         created_at: new Date().toISOString(),
         messages: [],
       };
-      
+
       setTempConversation(welcomeConversation);
       setSelectedConversationId(tempConversationId);
     } catch (error) {

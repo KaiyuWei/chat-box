@@ -128,12 +128,10 @@ const ChatBox = ({
 
   useEffect(() => {
     if (selectedConversationId && userConversations.length > 0) {
-      // Check if it's a temporary conversation ID
       if (
         typeof selectedConversationId === "string" &&
         selectedConversationId.startsWith("temp_")
       ) {
-        // This is a temporary conversation - show welcome message
         setMessages([
           {
             id: "welcome",
@@ -144,7 +142,6 @@ const ChatBox = ({
         ]);
         setConversationId(null);
       } else {
-        // This is a real conversation - load its messages
         const selectedConversation = userConversations.find(
           (conv) => conv.conversation_id === selectedConversationId
         );
@@ -153,7 +150,6 @@ const ChatBox = ({
         }
       }
     } else if (selectedConversationId === null) {
-      // Start a new conversation - clear messages and reset state
       setMessages([
         {
           id: "welcome",
@@ -168,7 +164,6 @@ const ChatBox = ({
       typeof selectedConversationId === "string" &&
       selectedConversationId.startsWith("temp_")
     ) {
-      // Handle temporary conversation when userConversations is empty or not loaded yet
       setMessages([
         {
           id: "welcome",
@@ -181,7 +176,6 @@ const ChatBox = ({
     }
   }, [selectedConversationId, userConversations]);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -234,7 +228,6 @@ const ChatBox = ({
   const handleNewConversation = (responseConversationId, userMessage) => {
     setConversationId(responseConversationId);
     onConversationChange && onConversationChange(responseConversationId);
-    // Notify parent that a new conversation was created
     onConversationCreated && onConversationCreated(responseConversationId);
   };
 

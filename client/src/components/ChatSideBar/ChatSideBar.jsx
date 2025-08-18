@@ -47,7 +47,6 @@ const ChatSidebar = ({
 
       const userConversations = await response.json();
 
-      // Sort conversations with latest on top (reverse order)
       const sortedConversations = [...userConversations].reverse();
       setConversations(sortedConversations);
     } catch (error) {
@@ -62,7 +61,6 @@ const ChatSidebar = ({
     fetchUserConversations();
   }, []);
 
-  // Refresh conversations when refreshTrigger changes (e.g., when new conversation is created)
   useEffect(() => {
     if (refreshTrigger) {
       fetchUserConversations();

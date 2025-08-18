@@ -7,7 +7,6 @@ const STORAGE_KEY = "selectedConversationId";
 
 const ChatPage = () => {
   const [selectedConversationId, setSelectedConversationId] = useState(() => {
-    // Initialize from localStorage if available
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : null;

@@ -7,6 +7,7 @@ const ChatBox = () => {
   const [conversationId, setConversationId] = useState(null);
   const [userConversations, setUserConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isThinking, setIsThinking] = useState(false);
 
   // Dummy function to get current user id
   // TODO: remove this after an auth system is added
@@ -171,6 +172,8 @@ const ChatBox = () => {
     const userMessage = createMessage(messageText, true);
     setMessages([...messages, userMessage]);
 
+    setIsThinking(true);
+
     try {
       const chatResponse = await sendChatRequest(messageText);
 
@@ -184,6 +187,8 @@ const ChatBox = () => {
     } catch (error) {
       console.error("Error sending message to backend:", error);
       // TODO: Add user-facing error handling (e.g., show error message in UI)
+    } finally {
+      setIsThinking(false);
     }
   };
 
@@ -216,29 +221,40 @@ const ChatBox = () => {
             <div className="text-gray-500">Loading conversations...</div>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.isUser ? "justify-end" : "justify-start"
-              }`}
-            >
+          <>
+            {messages.map((message) => (
               <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  message.isUser
-                    ? "bg-message-user text-message-user-foreground text-left"
-                    : "bg-message-other text-message-other-foreground text-left"
+                key={message.id}
+                className={`flex ${
+                  message.isUser ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="text-left prose prose-sm max-w-none">
-                  <ReactMarkdown>{message.text}</ReactMarkdown>
+                <div
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    message.isUser
+                      ? "bg-message-user text-message-user-foreground text-left"
+                      : "bg-message-other text-message-other-foreground text-left"
+                  }`}
+                >
+                  <div className="text-left prose prose-sm max-w-none">
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
+                  </div>
+                  <span className="text-xs opacity-70 mt-1 block text-left">
+                    {message.timestamp.toLocaleTimeString()}
+                  </span>
                 </div>
-                <span className="text-xs opacity-70 mt-1 block text-left">
-                  {message.timestamp.toLocaleTimeString()}
-                </span>
               </div>
-            </div>
-          ))
+            ))}
+            {isThinking && (
+              <div className="flex justify-start">
+                <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-message-other text-message-other-foreground text-left">
+                  <div className="text-left prose prose-sm max-w-none">
+                    <span className="italic text-gray-500">I'm thinking about it...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
       <ReplyBox onSendMessage={handleSendMessage} />

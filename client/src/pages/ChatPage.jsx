@@ -44,12 +44,14 @@ const ChatPage = () => {
 
   const handleCloseTempConversation = async () => {
     setTempConversation(null);
-    
+
     // Activate the first regular conversation if available
     try {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
       const userId = 1; // TODO: replace with actual user ID when auth system is added
-      const response = await fetch(`${apiBaseUrl}/api/user-conv-with-msg/${userId}`);
+      const response = await fetch(
+        `${apiBaseUrl}/api/user-conv-with-msg/${userId}`
+      );
       if (response.ok) {
         const conversations = await response.json();
         if (conversations.length > 0) {

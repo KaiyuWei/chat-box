@@ -234,6 +234,7 @@ const ChatBox = ({
     setConversationId(responseConversationId);
     onConversationChange && onConversationChange(responseConversationId);
     onConversationCreated && onConversationCreated(responseConversationId);
+    fetchUserConversations();
   };
 
   const handleAssistantResponse = (chatResponse) => {

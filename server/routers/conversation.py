@@ -46,7 +46,7 @@ def get_user_conversations(user_id: int, db: Session = Depends(get_mysql_db)):
     conversations = Conversation.get_by_user_id(db, user_id, with_messages=True)
 
     if not conversations:
-        raise HTTPException(status_code=404, detail="No conversations found for user")
+        return []
 
     return [
         GetConversationResponse(

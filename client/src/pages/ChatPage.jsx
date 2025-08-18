@@ -42,6 +42,29 @@ const ChatPage = () => {
     setSelectedConversationId(newConversationId);
   };
 
+  const handleNoConversationsFound = () => {
+    // Clear localStorage when user has no conversations
+    // This handles cases where the user was deleted/reset but localStorage still has old data
+    console.log("No conversations found for user, clearing localStorage");
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      
+
+      const tempConversationId = `temp_welcome_${Date.now()}`;
+      const welcomeConversation = {
+        conversation_id: tempConversationId,
+        title: "New Conversation",
+        created_at: new Date().toISOString(),
+        messages: [],
+      };
+      
+      setTempConversation(welcomeConversation);
+      setSelectedConversationId(tempConversationId);
+    } catch (error) {
+      console.warn("Failed to clear conversation ID from localStorage:", error);
+    }
+  };
+
   useEffect(() => {
     try {
       if (selectedConversationId !== null) {
@@ -73,6 +96,7 @@ const ChatPage = () => {
           selectedConversationId={selectedConversationId}
           onConversationChange={setSelectedConversationId}
           onConversationCreated={handleConversationCreated}
+          onNoConversationsFound={handleNoConversationsFound}
           isProcessing={isProcessing}
           setIsProcessing={setIsProcessing}
         />

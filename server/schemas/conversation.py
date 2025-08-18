@@ -9,7 +9,7 @@ class MessageInConversationResponse(BaseModel):
 
 
 class GetConversationResponse(BaseModel):
-    conversation_id: int = Field(..., description="The ID of the conversation")
+    conversation_id: int | None = Field(..., description="The ID of the conversation")
     title: str = Field(..., description="The title of the conversation")
     prompt: str | None = Field(None, description="The prompt of the conversation")
     created_at: str = Field(..., description="The timestamp of the conversation")

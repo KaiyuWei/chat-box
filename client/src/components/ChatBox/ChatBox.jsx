@@ -6,6 +6,7 @@ const ChatBox = ({
   selectedConversationId,
   onConversationChange,
   onConversationCreated,
+  onNoConversationsFound,
   isProcessing,
   setIsProcessing,
 }) => {
@@ -47,6 +48,8 @@ const ChatBox = ({
         if (response.status === 404) {
           console.log("No conversations found for user");
           setUserConversations([]);
+          // Notify parent that user has no conversations (should clear localStorage)
+          onNoConversationsFound && onNoConversationsFound();
           setMessages([
             {
               id: "welcome",
@@ -84,6 +87,7 @@ const ChatBox = ({
 
         loadConversationMessages(conversationToLoad);
       } else {
+        onNoConversationsFound && onNoConversationsFound();
         setMessages([
           {
             id: "welcome",
@@ -127,7 +131,7 @@ const ChatBox = ({
   }, []);
 
   useEffect(() => {
-    if (selectedConversationId && userConversations.length > 0) {
+    if (selectedConversationId) {
       if (
         typeof selectedConversationId === "string" &&
         selectedConversationId.startsWith("temp_")
@@ -141,7 +145,8 @@ const ChatBox = ({
           },
         ]);
         setConversationId(null);
-      } else {
+      } else if (userConversations.length > 0) {
+        // Handle real conversations
         const selectedConversation = userConversations.find(
           (conv) => conv.conversation_id === selectedConversationId
         );

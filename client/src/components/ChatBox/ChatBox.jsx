@@ -23,86 +23,96 @@ const ChatBox = () => {
         currentConversation.messages &&
         currentConversation.messages.length > 0
       ) {
-        
-        const messagesWithDates = currentConversation.messages.map(message => ({
-          ...message,
-          timestamp: new Date(message.timestamp)
-        }));
+        const messagesWithDates = currentConversation.messages.map(
+          (message) => ({
+            ...message,
+            timestamp: new Date(message.timestamp),
+          })
+        );
         setMessages(messagesWithDates);
       }
-      console.log("Loaded conversation:", currentConversation.id);
     }
   }, []);
 
+  const createMessage = (text, isUser, id = null) => {
+    return {
+      id: id || messages.length + (isUser ? 1 : 2),
+      text,
+      isUser,
+      timestamp: new Date(),
+    };
+  };
+
+  const sendChatRequest = async (messageText) => {
+    const chatRequest = {
+      messages: [
+        {
+          role: "user",
+          content: messageText,
+        },
+      ],
+    };
+
+    if (conversationId) {
+      chatRequest.conversation_id = conversationId;
+    }
+
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+    const response = await fetch(`${apiBaseUrl}/api/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(chatRequest),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const handleNewConversation = (responseConversationId, userMessage) => {
+    setConversationId(responseConversationId);
+
+    const newConversation = {
+      id: responseConversationId,
+      messages: [userMessage],
+      createdAt: new Date().toISOString(),
+    };
+
+    conversationStorage.saveCurrentConversation(newConversation);
+  };
+
+  const handleAssistantResponse = (chatResponse) => {
+    const assistantMessage = createMessage(chatResponse.messages, false);
+    setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+    conversationStorage.addMessage(assistantMessage);
+    return assistantMessage;
+  };
+
   const handleSendMessage = async (messageText) => {
-    if (messageText.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
-        text: messageText,
-        isUser: true,
-        timestamp: new Date(),
-      };
-      setMessages([...messages, newMessage]);
+    if (!messageText.trim()) return;
 
-      try {
-        const chatRequest = {
-          messages: [
-            {
-              role: "user",
-              content: messageText,
-            },
-          ],
-        };
+    const userMessage = createMessage(messageText, true);
+    setMessages([...messages, userMessage]);
 
-        if (conversationId) {
-          chatRequest.conversation_id = conversationId;
-        }
+    try {
+      const chatResponse = await sendChatRequest(messageText);
 
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-        const response = await fetch(`${apiBaseUrl}/api/chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(chatRequest),
-        });
+      const responseConversationId = chatResponse.conversation_id;
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const chatResponse = await response.json();
-        console.log("Backend response:", chatResponse);
-
-        const responseConversationId = chatResponse.conversation_id;
-
-        if (!conversationId && responseConversationId) {
-          setConversationId(responseConversationId);
-
-          const newConversation = {
-            id: responseConversationId,
-            messages: [newMessage],
-            createdAt: new Date().toISOString(),
-          };
-
-          conversationStorage.saveCurrentConversation(newConversation);
-          console.log("Created new conversation:", responseConversationId);
-        } else if (conversationId) {
-          conversationStorage.addMessage(newMessage);
-        }
-
-        const assistantMessage = {
-          id: messages.length + 2,
-          text: chatResponse.messages,
-          isUser: false,
-          timestamp: new Date(),
-        };
-        setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-
-        conversationStorage.addMessage(assistantMessage);
-      } catch (error) {
-        console.error("Error sending message to backend:", error);
+      if (!conversationId && responseConversationId) {
+        handleNewConversation(responseConversationId, userMessage);
+      } else if (conversationId) {
+        conversationStorage.addMessage(userMessage);
       }
+
+      handleAssistantResponse(chatResponse);
+    } catch (error) {
+      console.error("Error sending message to backend:", error);
+      // TODO: Add user-facing error handling (e.g., show error message in UI)
     }
   };
 

@@ -1,16 +1,6 @@
 from pydantic import BaseModel, Field
 
 
-class GetConversationRequest(BaseModel):
-    conversation_id: int = Field(
-        ..., description="The ID of the conversation to retrieve"
-    )
-    with_messages: bool = Field(
-        False,
-        description="Whether to include messages of the conversation in the response",
-    )
-
-
 class MessageInConversationResponse(BaseModel):
     id: int = Field(..., description="The ID of the message")
     sender: str = Field(..., description="The sender of the message")
@@ -24,5 +14,5 @@ class GetConversationResponse(BaseModel):
     prompt: str | None = Field(None, description="The prompt of the conversation")
     created_at: str = Field(..., description="The timestamp of the conversation")
     messages: list[MessageInConversationResponse] = Field(
-        ..., description="The messages in the conversation"
+        None, description="The messages in the conversation"
     )

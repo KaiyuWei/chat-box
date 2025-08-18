@@ -8,7 +8,7 @@ router = APIRouter(tags=["conversation"])
 
 
 @router.get(
-    "/conversation-with-message/{conversation_id}",
+    "/conv-with-msg/{conversation_id}",
     response_model=GetConversationResponse,
 )
 def get_conversation(conversation_id: int, db: Session = Depends(get_mysql_db)):
@@ -36,3 +36,30 @@ def get_conversation(conversation_id: int, db: Session = Depends(get_mysql_db)):
         created_at=conversation.created_at.isoformat(),
         messages=message_responses,
     )
+
+
+@router.get("/user-conv-with-msg/{user_id}")
+def get_user_conversations(user_id: int, db: Session = Depends(get_mysql_db)):
+    conversations = Conversation.get_by_user_id(db, user_id)
+
+    if not conversations:
+        raise HTTPException(status_code=404, detail="No conversations found for user")
+
+    return [
+        GetConversationResponse(
+            conversation_id=conv.id,
+            title=conv.title,
+            prompt=conv.prompt,
+            created_at=conv.created_at.isoformat(),
+            messages=[
+                MessageInConversationResponse(
+                    id=msg.id,
+                    sender=msg.sent_by.value,
+                    content=msg.content,
+                    created_at=msg.created_at.isoformat(),
+                )
+                for msg in conv.messages
+            ],
+        )
+        for conv in conversations
+    ]

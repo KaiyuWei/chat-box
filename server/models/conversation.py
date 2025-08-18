@@ -50,3 +50,13 @@ class Conversation(Base):
 
         conversation = query.filter(Conversation.id == conversation_id).first()
         return conversation
+
+    @classmethod
+    def get_by_user_id(
+        cls, db: Session, user_id: int, with_messages: bool = False
+    ) -> list["Conversation"]:
+        query = db.query(Conversation)
+        if with_messages:
+            query = query.options(joinedload(Conversation.messages))
+
+        return query.filter(Conversation.user_id == user_id).all()

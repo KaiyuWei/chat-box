@@ -95,11 +95,11 @@ def sample_conversation_with_messages(db_session, sample_conversation):
 
 
 class TestGetConversation:
-    """Test cases for the GET /api/conversation-with-message/{conversation_id} endpoint."""
+    """Test cases for the GET /api/conv-with-msg/{conversation_id} endpoint."""
 
     def test_get_conversation_success_without_messages(self, client_with_conversation, sample_conversation):
         """Test successfully retrieving a conversation without messages."""
-        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{sample_conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -115,7 +115,7 @@ class TestGetConversation:
         """Test successfully retrieving a conversation with messages."""
         conversation, messages = sample_conversation_with_messages
         
-        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -147,7 +147,7 @@ class TestGetConversation:
         """Test retrieving a non-existent conversation returns 404."""
         non_existent_id = 99999
         
-        response = client_with_conversation.get(f"/api/conversation-with-message/{non_existent_id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{non_existent_id}")
         
         assert response.status_code == 404
         data = response.json()
@@ -155,7 +155,7 @@ class TestGetConversation:
 
     def test_get_conversation_with_zero_id(self, client_with_conversation):
         """Test retrieving conversation with ID 0 returns 404."""
-        response = client_with_conversation.get("/api/conversation-with-message/0")
+        response = client_with_conversation.get("/api/conv-with-msg/0")
         
         assert response.status_code == 404
         data = response.json()
@@ -163,7 +163,7 @@ class TestGetConversation:
 
     def test_get_conversation_with_negative_id(self, client_with_conversation):
         """Test retrieving conversation with negative ID returns 404."""
-        response = client_with_conversation.get("/api/conversation-with-message/-1")
+        response = client_with_conversation.get("/api/conv-with-msg/-1")
         
         assert response.status_code == 404
         data = response.json()
@@ -171,7 +171,7 @@ class TestGetConversation:
 
     def test_get_conversation_invalid_id_format(self, client_with_conversation):
         """Test retrieving conversation with invalid ID format returns 422."""
-        response = client_with_conversation.get("/api/conversation-with-message/invalid")
+        response = client_with_conversation.get("/api/conv-with-msg/invalid")
         
         assert response.status_code == 422
         data = response.json()
@@ -181,7 +181,7 @@ class TestGetConversation:
         """Test that the response format matches the expected schema."""
         conversation, messages = sample_conversation_with_messages
         
-        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -204,7 +204,7 @@ class TestGetConversation:
         """Test that datetime fields are properly formatted as ISO strings."""
         conversation, messages = sample_conversation_with_messages
         
-        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -251,7 +251,7 @@ class TestGetConversation:
             content="Third message"
         )
         
-        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{sample_conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -275,7 +275,7 @@ class TestGetConversation:
                 content=f"Message number {i + 1}"
             )
         
-        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{sample_conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -305,7 +305,7 @@ class TestGetConversation:
             content="Special chars: émojis 🚀 and unicode: αβγδε"
         )
         
-        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -325,7 +325,7 @@ class TestGetConversation:
             prompt=None
         )
         
-        response = client_with_conversation.get(f"/api/conversation-with-message/{conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -345,7 +345,7 @@ class TestGetConversation:
             )
         
         # The endpoint should work efficiently with eager loading
-        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{sample_conversation.id}")
         
         assert response.status_code == 200
         data = response.json()
@@ -353,7 +353,289 @@ class TestGetConversation:
 
     def test_get_conversation_response_content_type(self, client_with_conversation, sample_conversation):
         """Test that response has correct content type."""
-        response = client_with_conversation.get(f"/api/conversation-with-message/{sample_conversation.id}")
+        response = client_with_conversation.get(f"/api/conv-with-msg/{sample_conversation.id}")
+        
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "application/json"
+
+
+class TestGetUserConversations:
+    """Test cases for the GET /api/user-conv-with-msg/{user_id} endpoint."""
+
+    def test_get_user_conversations_success_with_single_conversation(self, client_with_conversation, sample_conversation_with_messages):
+        """Test successfully retrieving conversations for a user with one conversation."""
+        conversation, messages = sample_conversation_with_messages
+        
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{conversation.user_id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should return a list with one conversation
+        assert isinstance(data, list)
+        assert len(data) == 1
+        
+        # Verify conversation data
+        conv_data = data[0]
+        assert conv_data["conversation_id"] == conversation.id
+        assert conv_data["title"] == "Test Conversation"
+        assert conv_data["prompt"] == "You are a helpful assistant"
+        assert "created_at" in conv_data
+        
+        # Verify messages
+        assert len(conv_data["messages"]) == 2
+        assert conv_data["messages"][0]["content"] == "Hello, how are you?"
+        assert conv_data["messages"][1]["content"] == "Hello! I'm doing well, thank you for asking. How can I help you today?"
+
+    def test_get_user_conversations_success_with_multiple_conversations(self, client_with_conversation, db_session, sample_user):
+        """Test successfully retrieving multiple conversations for a user."""
+        # Create multiple conversations for the same user
+        conv1 = Conversation.create_conversation(
+            db=db_session,
+            user_id=sample_user.id,
+            title="First Conversation",
+            prompt="You are a coding assistant"
+        )
+        
+        conv2 = Conversation.create_conversation(
+            db=db_session,
+            user_id=sample_user.id,
+            title="Second Conversation", 
+            prompt="You are a math tutor"
+        )
+        
+        # Add messages to first conversation
+        Message.create_message(
+            db=db_session,
+            conversation_id=conv1.id,
+            sent_by=SenderType.USER,
+            content="Help me with Python"
+        )
+        
+        # Add messages to second conversation
+        Message.create_message(
+            db=db_session,
+            conversation_id=conv2.id,
+            sent_by=SenderType.USER,
+            content="Solve 2+2"
+        )
+        
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{sample_user.id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should return a list with two conversations
+        assert isinstance(data, list)
+        assert len(data) == 2
+        
+        # Verify both conversations are present (order might vary)
+        titles = [conv["title"] for conv in data]
+        assert "First Conversation" in titles
+        assert "Second Conversation" in titles
+        
+        # Verify each conversation has its messages
+        for conv_data in data:
+            if conv_data["title"] == "First Conversation":
+                assert len(conv_data["messages"]) == 1
+                assert conv_data["messages"][0]["content"] == "Help me with Python"
+            elif conv_data["title"] == "Second Conversation":
+                assert len(conv_data["messages"]) == 1
+                assert conv_data["messages"][0]["content"] == "Solve 2+2"
+
+    def test_get_user_conversations_success_with_conversations_without_messages(self, client_with_conversation, db_session, sample_user):
+        """Test retrieving conversations that have no messages."""
+        # Create conversations without messages
+        conv1 = Conversation.create_conversation(
+            db=db_session,
+            user_id=sample_user.id,
+            title="Empty Conversation 1",
+            prompt="You are an assistant"
+        )
+        
+        conv2 = Conversation.create_conversation(
+            db=db_session,
+            user_id=sample_user.id,
+            title="Empty Conversation 2",
+            prompt="You are another assistant"
+        )
+        
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{sample_user.id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        assert len(data) == 2
+        
+        # Both conversations should have empty message lists
+        for conv_data in data:
+            assert conv_data["messages"] == []
+            assert conv_data["title"] in ["Empty Conversation 1", "Empty Conversation 2"]
+
+    def test_get_user_conversations_not_found(self, client_with_conversation):
+        """Test retrieving conversations for non-existent user returns 404."""
+        non_existent_user_id = 99999
+        
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{non_existent_user_id}")
+        
+        assert response.status_code == 404
+        data = response.json()
+        assert data["detail"] == "No conversations found for user"
+
+    def test_get_user_conversations_with_zero_id(self, client_with_conversation):
+        """Test retrieving conversations for user ID 0 returns 404."""
+        response = client_with_conversation.get("/api/user-conv-with-msg/0")
+        
+        assert response.status_code == 404
+        data = response.json()
+        assert data["detail"] == "No conversations found for user"
+
+    def test_get_user_conversations_with_negative_id(self, client_with_conversation):
+        """Test retrieving conversations for negative user ID returns 404."""
+        response = client_with_conversation.get("/api/user-conv-with-msg/-1")
+        
+        assert response.status_code == 404
+        data = response.json()
+        assert data["detail"] == "No conversations found for user"
+
+    def test_get_user_conversations_invalid_id_format(self, client_with_conversation):
+        """Test retrieving conversations with invalid user ID format returns 422."""
+        response = client_with_conversation.get("/api/user-conv-with-msg/invalid")
+        
+        assert response.status_code == 422
+        data = response.json()
+        assert "detail" in data
+
+    def test_get_user_conversations_response_format(self, client_with_conversation, sample_conversation_with_messages):
+        """Test that the response format matches the expected schema."""
+        conversation, messages = sample_conversation_with_messages
+        
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{conversation.user_id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should be a list
+        assert isinstance(data, list)
+        assert len(data) >= 1
+        
+        # Verify each conversation has required fields
+        for conv_data in data:
+            required_fields = ["conversation_id", "title", "prompt", "created_at", "messages"]
+            for field in required_fields:
+                assert field in conv_data
+            
+            # Verify message fields if messages exist
+            for message in conv_data["messages"]:
+                message_fields = ["id", "sender", "content", "created_at"]
+                for field in message_fields:
+                    assert field in message
+                
+                # Verify sender is valid enum value
+                assert message["sender"] in ["user", "assistant"]
+
+    def test_get_user_conversations_datetime_format(self, client_with_conversation, sample_conversation_with_messages):
+        """Test that datetime fields are properly formatted as ISO strings."""
+        conversation, messages = sample_conversation_with_messages
+        
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{conversation.user_id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        for conv_data in data:
+            # Verify conversation created_at is ISO format
+            created_at = conv_data["created_at"]
+            assert isinstance(created_at, str)
+            datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            
+            # Verify message created_at fields are ISO format
+            for message in conv_data["messages"]:
+                msg_created_at = message["created_at"]
+                assert isinstance(msg_created_at, str)
+                datetime.fromisoformat(msg_created_at.replace("Z", "+00:00"))
+
+    def test_get_user_conversations_with_different_users(self, client_with_conversation, db_session):
+        """Test that endpoint only returns conversations for the specified user."""
+        # Create two different users
+        user1 = User(
+            username="user1",
+            email="user1@example.com",
+            password_hash="hashed_password1"
+        )
+        user2 = User(
+            username="user2",
+            email="user2@example.com",
+            password_hash="hashed_password2"
+        )
+        db_session.add_all([user1, user2])
+        db_session.commit()
+        db_session.refresh(user1)
+        db_session.refresh(user2)
+        
+        # Create conversations for both users
+        conv1 = Conversation.create_conversation(
+            db=db_session,
+            user_id=user1.id,
+            title="User 1 Conversation",
+            prompt="Assistant for user 1"
+        )
+        
+        conv2 = Conversation.create_conversation(
+            db=db_session,
+            user_id=user2.id,
+            title="User 2 Conversation",
+            prompt="Assistant for user 2"
+        )
+        
+        # Get conversations for user1
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{user1.id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should only return user1's conversation
+        assert len(data) == 1
+        assert data[0]["title"] == "User 1 Conversation"
+        assert data[0]["conversation_id"] == conv1.id
+
+    def test_get_user_conversations_with_many_conversations(self, client_with_conversation, db_session, sample_user):
+        """Test retrieving many conversations for a user."""
+        # Create 10 conversations
+        conversations = []
+        for i in range(10):
+            conv = Conversation.create_conversation(
+                db=db_session,
+                user_id=sample_user.id,
+                title=f"Conversation {i + 1}",
+                prompt=f"Assistant prompt {i + 1}"
+            )
+            conversations.append(conv)
+            
+            # Add a message to each conversation
+            Message.create_message(
+                db=db_session,
+                conversation_id=conv.id,
+                sent_by=SenderType.USER,
+                content=f"Message for conversation {i + 1}"
+            )
+        
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{sample_user.id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should return all 10 conversations
+        assert len(data) == 10
+        
+        # Verify each conversation has its message
+        titles = [conv["title"] for conv in data]
+        for i in range(10):
+            assert f"Conversation {i + 1}" in titles
+
+    def test_get_user_conversations_response_content_type(self, client_with_conversation, sample_conversation):
+        """Test that response has correct content type."""
+        response = client_with_conversation.get(f"/api/user-conv-with-msg/{sample_conversation.user_id}")
         
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/json"

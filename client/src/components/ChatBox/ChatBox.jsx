@@ -1,38 +1,119 @@
 import ReplyBox from "./ReplyBox";
 import { useState, useEffect } from "react";
-import { conversationStorage } from "../../utils/conversationStorage";
 import ReactMarkdown from "react-markdown";
 
 const ChatBox = () => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hello! Welcome to the chat app.",
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
+  const [userConversations, setUserConversations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Dummy function to get current user id
+  // TODO: remove this after an auth system is added
+  const getCurrentUserId = () => {
+    return 1;
+  };
+
+  const fetchUserConversations = async () => {
+    try {
+      setIsLoading(true);
+      const userId = getCurrentUserId();
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+      console.log(`Fetching conversations for user ID: ${userId}`);
+
+      const response = await fetch(
+        `${apiBaseUrl}/api/user-conv-with-msg/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log("No conversations found for user");
+          setUserConversations([]);
+          setMessages([
+            {
+              id: "welcome",
+              text: "Hello! Welcome to the chat app. Start a new conversation!",
+              isUser: false,
+              timestamp: new Date(),
+            },
+          ]);
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const conversations = await response.json();
+      console.log("User conversations fetched successfully:", conversations);
+      console.log(`Total conversations found: ${conversations.length}`);
+
+      conversations.forEach((conv, index) => {
+        console.log(`Conversation ${index + 1}:`, {
+          id: conv.conversation_id,
+          title: conv.title,
+          messageCount: conv.messages.length,
+          createdAt: conv.created_at,
+        });
+      });
+
+      setUserConversations(conversations);
+
+      // Load the latest conversation (last in array)
+      if (conversations.length > 0) {
+        const latestConversation = conversations[conversations.length - 1];
+        loadConversationMessages(latestConversation);
+      } else {
+        setMessages([
+          {
+            id: "welcome",
+            text: "Hello! Welcome to the chat app. Start a new conversation!",
+            isUser: false,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error fetching user conversations:", error);
+      setUserConversations([]);
+      setMessages([
+        {
+          id: "error",
+          text: "Sorry, there was an error loading your conversations. Please try refreshing the page.",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadConversationMessages = (conversation) => {
+    console.log(
+      `Loading conversation: ${conversation.title} (ID: ${conversation.conversation_id})`
+    );
+
+    setConversationId(conversation.conversation_id);
+
+    const convertedMessages = conversation.messages.map((apiMessage) => ({
+      id: apiMessage.id,
+      text: apiMessage.content,
+      isUser: apiMessage.sender === "user",
+      timestamp: new Date(apiMessage.created_at),
+    }));
+
+    console.log(`Loaded ${convertedMessages.length} messages for conversation`);
+    setMessages(convertedMessages);
+  };
 
   useEffect(() => {
-    const currentConversation = conversationStorage.getCurrentConversation();
-
-    if (currentConversation) {
-      setConversationId(currentConversation.id);
-
-      if (
-        currentConversation.messages &&
-        currentConversation.messages.length > 0
-      ) {
-        const messagesWithDates = currentConversation.messages.map(
-          (message) => ({
-            ...message,
-            timestamp: new Date(message.timestamp),
-          })
-        );
-        setMessages(messagesWithDates);
-      }
-    }
+    fetchUserConversations();
   }, []);
 
   const createMessage = (text, isUser, id = null) => {
@@ -76,20 +157,11 @@ const ChatBox = () => {
 
   const handleNewConversation = (responseConversationId, userMessage) => {
     setConversationId(responseConversationId);
-
-    const newConversation = {
-      id: responseConversationId,
-      messages: [userMessage],
-      createdAt: new Date().toISOString(),
-    };
-
-    conversationStorage.saveCurrentConversation(newConversation);
   };
 
   const handleAssistantResponse = (chatResponse) => {
     const assistantMessage = createMessage(chatResponse.messages, false);
     setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-    conversationStorage.addMessage(assistantMessage);
     return assistantMessage;
   };
 
@@ -106,8 +178,6 @@ const ChatBox = () => {
 
       if (!conversationId && responseConversationId) {
         handleNewConversation(responseConversationId, userMessage);
-      } else if (conversationId) {
-        conversationStorage.addMessage(userMessage);
       }
 
       handleAssistantResponse(chatResponse);
@@ -125,12 +195,11 @@ const ChatBox = () => {
             Active Conversation ID: {conversationId}
             <button
               onClick={() => {
-                conversationStorage.clearConversation();
                 setConversationId(null);
                 setMessages([
                   {
-                    id: 1,
-                    text: "Hello! Welcome to the chat app.",
+                    id: "welcome",
+                    text: "Hello! Welcome to the chat app. Start a new conversation!",
                     isUser: false,
                     timestamp: new Date(),
                   },
@@ -138,33 +207,39 @@ const ChatBox = () => {
               }}
               className="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
             >
-              Clear Conversation
+              New Conversation
             </button>
           </div>
         )}
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.isUser ? "justify-end" : "justify-start"
-            }`}
-          >
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="text-gray-500">Loading conversations...</div>
+          </div>
+        ) : (
+          messages.map((message) => (
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.isUser
-                  ? "bg-message-user text-message-user-foreground text-left"
-                  : "bg-message-other text-message-other-foreground text-left"
+              key={message.id}
+              className={`flex ${
+                message.isUser ? "justify-end" : "justify-start"
               }`}
             >
-              <div className="text-left prose prose-sm max-w-none">
-                <ReactMarkdown>{message.text}</ReactMarkdown>
+              <div
+                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  message.isUser
+                    ? "bg-message-user text-message-user-foreground text-left"
+                    : "bg-message-other text-message-other-foreground text-left"
+                }`}
+              >
+                <div className="text-left prose prose-sm max-w-none">
+                  <ReactMarkdown>{message.text}</ReactMarkdown>
+                </div>
+                <span className="text-xs opacity-70 mt-1 block text-left">
+                  {message.timestamp.toLocaleTimeString()}
+                </span>
               </div>
-              <span className="text-xs opacity-70 mt-1 block text-left">
-                {message.timestamp.toLocaleTimeString()}
-              </span>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
       <ReplyBox onSendMessage={handleSendMessage} />
     </div>

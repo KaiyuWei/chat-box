@@ -31,5 +31,8 @@ class Settings:
 
     chat_model = {"MAX_NEW_TOKENS": 100, "TRUST_REMOTE_CODE": True}
 
+    # dev
+    DUMMY_USER_ID: int = 1
+
 
 settings = Settings()

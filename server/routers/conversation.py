@@ -1,3 +1,4 @@
+from config import settings
 from database import get_mysql_db
 from fastapi import APIRouter, Depends, HTTPException
 from models import Conversation
@@ -40,7 +41,9 @@ def get_conversation(conversation_id: int, db: Session = Depends(get_mysql_db)):
 
 @router.get("/user-conv-with-msg/{user_id}")
 def get_user_conversations(user_id: int, db: Session = Depends(get_mysql_db)):
-    conversations = Conversation.get_by_user_id(db, user_id)
+    # TODO: remove the dummy user id here after an auth system is added
+    user_id = settings.DUMMY_USER_ID
+    conversations = Conversation.get_by_user_id(db, user_id, with_messages=True)
 
     if not conversations:
         raise HTTPException(status_code=404, detail="No conversations found for user")

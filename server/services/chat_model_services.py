@@ -1,19 +1,19 @@
 from time import sleep
 
+from config import settings
 from models import Conversation, Message
 from models.conversation import SYSTEM_PROMPT_TYPE
 from models.message import SenderType
 from schemas import ChatRequest
 from sqlalchemy.orm import Session, joinedload
 
-DUMMY_USER_ID = 1
-
 
 def get_conversation_from_request(
     chat_request: ChatRequest, db: Session
 ) -> Conversation:
     conversation_id = chat_request.conversation_id
-    user_id = DUMMY_USER_ID
+    # TODO: remove the dummy user id here after an auth system is added
+    user_id = settings.DUMMY_USER_ID
     messages = chat_request.messages
     title = messages[-1].content if messages else "New Conversation"
     prompt = chat_request.prompt if chat_request.prompt else ""

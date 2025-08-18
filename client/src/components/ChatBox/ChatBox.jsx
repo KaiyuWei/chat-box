@@ -2,7 +2,11 @@ import ReplyBox from "./ReplyBox";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 
-const ChatBox = ({ selectedConversationId, onConversationChange }) => {
+const ChatBox = ({
+  selectedConversationId,
+  onConversationChange,
+  onConversationCreated,
+}) => {
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
   const [userConversations, setUserConversations] = useState([]);
@@ -117,12 +121,56 @@ const ChatBox = ({ selectedConversationId, onConversationChange }) => {
 
   useEffect(() => {
     if (selectedConversationId && userConversations.length > 0) {
-      const selectedConversation = userConversations.find(
-        (conv) => conv.conversation_id === selectedConversationId
-      );
-      if (selectedConversation) {
-        loadConversationMessages(selectedConversation);
+      // Check if it's a temporary conversation ID
+      if (
+        typeof selectedConversationId === "string" &&
+        selectedConversationId.startsWith("temp_")
+      ) {
+        // This is a temporary conversation - show welcome message
+        setMessages([
+          {
+            id: "welcome",
+            text: "Hello! Welcome to the chat app. Start a new conversation!",
+            isUser: false,
+            timestamp: new Date(),
+          },
+        ]);
+        setConversationId(null);
+      } else {
+        // This is a real conversation - load its messages
+        const selectedConversation = userConversations.find(
+          (conv) => conv.conversation_id === selectedConversationId
+        );
+        if (selectedConversation) {
+          loadConversationMessages(selectedConversation);
+        }
       }
+    } else if (selectedConversationId === null) {
+      // Start a new conversation - clear messages and reset state
+      setMessages([
+        {
+          id: "welcome",
+          text: "Hello! Welcome to the chat app. Start a new conversation!",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+      setConversationId(null);
+    } else if (
+      selectedConversationId &&
+      typeof selectedConversationId === "string" &&
+      selectedConversationId.startsWith("temp_")
+    ) {
+      // Handle temporary conversation when userConversations is empty or not loaded yet
+      setMessages([
+        {
+          id: "welcome",
+          text: "Hello! Welcome to the chat app. Start a new conversation!",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+      setConversationId(null);
     }
   }, [selectedConversationId, userConversations]);
 
@@ -145,7 +193,13 @@ const ChatBox = ({ selectedConversationId, onConversationChange }) => {
       ],
     };
 
-    if (selectedConversationId) {
+    if (
+      selectedConversationId &&
+      !(
+        typeof selectedConversationId === "string" &&
+        selectedConversationId.startsWith("temp_")
+      )
+    ) {
       chatRequest.conversation_id = selectedConversationId;
     }
 
@@ -168,6 +222,8 @@ const ChatBox = ({ selectedConversationId, onConversationChange }) => {
   const handleNewConversation = (responseConversationId, userMessage) => {
     setConversationId(responseConversationId);
     onConversationChange && onConversationChange(responseConversationId);
+    // Notify parent that a new conversation was created
+    onConversationCreated && onConversationCreated(responseConversationId);
   };
 
   const handleAssistantResponse = (chatResponse) => {
@@ -189,7 +245,12 @@ const ChatBox = ({ selectedConversationId, onConversationChange }) => {
 
       const responseConversationId = chatResponse.conversation_id;
 
-      if (!selectedConversationId && responseConversationId) {
+      if (
+        (!selectedConversationId ||
+          (typeof selectedConversationId === "string" &&
+            selectedConversationId.startsWith("temp_"))) &&
+        responseConversationId
+      ) {
         handleNewConversation(responseConversationId, userMessage);
       }
 

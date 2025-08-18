@@ -3,7 +3,13 @@ import ConversationTab from "./ConversationTab";
 import IconButton from "../ui/icon-button";
 import { PlusIcon } from "../ui/icons";
 
-const ChatSidebar = ({ selectedConversationId, onConversationSelect }) => {
+const ChatSidebar = ({
+  selectedConversationId,
+  onConversationSelect,
+  onNewConversation,
+  refreshTrigger,
+  tempConversation,
+}) => {
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -61,6 +67,13 @@ const ChatSidebar = ({ selectedConversationId, onConversationSelect }) => {
     fetchUserConversations();
   }, []);
 
+  // Refresh conversations when refreshTrigger changes (e.g., when new conversation is created)
+  useEffect(() => {
+    if (refreshTrigger) {
+      fetchUserConversations();
+    }
+  }, [refreshTrigger]);
+
   return (
     <div className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
@@ -69,8 +82,7 @@ const ChatSidebar = ({ selectedConversationId, onConversationSelect }) => {
           variant="default"
           size="sm"
           onClick={() => {
-            // TODO: Add new conversation logic here
-            console.log("New conversation clicked");
+            onNewConversation && onNewConversation();
           }}
         >
           <PlusIcon size={14} />
@@ -86,8 +98,20 @@ const ChatSidebar = ({ selectedConversationId, onConversationSelect }) => {
               ></div>
             ))}
           </div>
-        ) : conversations.length > 0 ? (
+        ) : conversations.length > 0 || tempConversation ? (
           <div className="space-y-2">
+            {/* Show temporary conversation at the top if it exists */}
+            {tempConversation && (
+              <ConversationTab
+                key={tempConversation.conversation_id}
+                conversation={tempConversation}
+                isActive={
+                  tempConversation.conversation_id === selectedConversationId
+                }
+                onClick={onConversationSelect}
+              />
+            )}
+            {/* Show regular conversations */}
             {conversations.map((conversation) => (
               <ConversationTab
                 key={conversation.conversation_id}

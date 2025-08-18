@@ -5,6 +5,7 @@ A modern, full-stack chat application featuring local AI model integration, real
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Docker and Docker Compose
 - Node.js 18+ (for local development)
 - Python 3.9+ (for local development)
@@ -24,9 +25,11 @@ docker compose logs server -f
 ```
 
 **⏰ First Startup:** The backend server needs 5-10 minutes to load the AI model on first boot. Look for this message in the logs:
+
 ```
 INFO - Chat model and processor loaded successfully
 ```
+
 If you see it, then you're good to go! The frontend is running on http://localhost:3000/
 
 ### Alternative: Local Development (Optional)
@@ -34,6 +37,7 @@ If you see it, then you're good to go! The frontend is running on http://localho
 > **Note**: This project is designed for Docker-first development. Local development setup is provided for reference but may require additional configuration and compatibility adjustments.
 
 #### Backend Setup
+
 ```bash
 cd server
 uv sync  # Install dependencies from lockfile
@@ -43,6 +47,7 @@ python main.py
 ```
 
 #### Frontend Setup
+
 ```bash
 cd client
 npm install
@@ -50,6 +55,7 @@ npm run dev
 ```
 
 #### Requirements for Local Development
+
 - MySQL server running locally
 - Environment variables configured (see `server/config.py`)
 - Potential compatibility issues with AI model dependencies
@@ -57,18 +63,21 @@ npm run dev
 ## 🛠 Technology Stack
 
 ### Frontend
+
 - **React 18** - Modern UI framework
 - **Tailwind CSS** - Utility-first styling
 - **Vite** - Fast development build tool
 - **ReactMarkdown** - Rich text rendering for AI responses
 
 ### Backend
+
 - **FastAPI** - High-performance Python web framework
 - **SQLAlchemy** - Database ORM with Alembic migrations
 - **MySQL** - Primary database
 - **Local AI Model** - Qwen/Qwen3-0.6B (any-to-any model, currently text-to-text only). Chosen for its lower parameter count (0.6B) to enable easier local development and testing. Production deployments can scale up to larger parameter models for enhanced performance
 
 ### Infrastructure
+
 - **Docker & Docker Compose** - Containerized deployment
 - **Nginx** - Reverse proxy (in production)
 
@@ -79,6 +88,7 @@ The application uses a well-structured relational database schema designed for s
 ### Core Tables
 
 #### **Users Table**
+
 ```sql
 users (
     id: INTEGER PRIMARY KEY,
@@ -89,9 +99,11 @@ users (
     updated_at: TIMESTAMP
 )
 ```
-*Currently using dummy user (ID: 1) for development. Will be expanded with proper authentication.*
+
+_Currently using dummy user (ID: 1) for development. Will be expanded with proper authentication._
 
 #### **Conversations Table**
+
 ```sql
 conversations (
     id: INTEGER PRIMARY KEY,
@@ -102,9 +114,11 @@ conversations (
     updated_at: TIMESTAMP
 )
 ```
-*Stores conversation metadata and initial prompts for context.*
+
+_Stores conversation metadata and initial prompts for context._
 
 #### **Messages Table**
+
 ```sql
 messages (
     id: INTEGER PRIMARY KEY,
@@ -114,7 +128,8 @@ messages (
     created_at: TIMESTAMP
 )
 ```
-*Stores all chat messages with sender identification.*
+
+_Stores all chat messages with sender identification._
 
 ### Schema Features
 
@@ -127,6 +142,7 @@ messages (
 ### Database Migrations
 
 The project uses **Alembic** for database schema management:
+
 ```bash
 # View migration history
 alembic history
@@ -141,6 +157,7 @@ alembic revision --autogenerate -m "description"
 ## ✨ Key Features
 
 ### 🎯 Core Functionality
+
 - **Real-time Chat Interface** - Smooth messaging experience with typing indicators
 - **Continuous Conversations** - AI maintains context across multiple messages within each conversation
 - **Conversation Management** - Create, switch, and organize multiple conversations
@@ -148,11 +165,13 @@ alembic revision --autogenerate -m "description"
 - **Persistent Storage** - Conversation history saved across sessions
 
 ### 🎨 User Experience
+
 - **Conversation Sidebar** - Easy navigation between chats
 - **Visual Feedback** - Loading states, animations, and status indicators
 - **localStorage Persistence** - Remembers active conversation across page refreshes
 
 ### 🔧 Developer Experience
+
 - **Clean Architecture** - Modular component structure
 - **Error Handling** - Helpful error messages for developers
 - **Docker Integration** - One-command deployment
@@ -161,22 +180,26 @@ alembic revision --autogenerate -m "description"
 ## 🎨 Creative Design Choices
 
 ### Frontend Architecture
+
 - **Component Modularization**: Extracted reusable components (`ConversationTab`, UI components) for better maintainability
 - **State Lifting**: Centralized state management in `ChatPage` component for complex inter-component communication
 - **Barrel Exports**: Clean import statements using `index.js` files
 - **Error Message Externalization**: Separated error messages into dedicated utility files for better code organization
 
 ### User Interface Decisions
+
 - **Conversation Freezing**: When creating new conversations, other tabs become disabled to prevent confusion and ensure focused interaction
 - **Visual Feedback**: Animated thinking indicators and status-aware UI components
 - **Intuitive Icons**: X buttons for closing temporary conversations, + button for creating new ones
 
 ### Backend Design
+
 - **Consistent API Responses**: Standardized array responses even for empty results
 - **Startup Event Handling**: Automatic dummy user creation for development
 - **Modular Router Structure**: Separated concerns with dedicated routers for different functionalities
 
 ### Development Workflow
+
 - **Developer-Friendly Error Messages**: Humorous, informative error messages that guide developers through common issues
 - **Hot Reload Support**: Fast development cycle with Vite and FastAPI auto-reload
 - **Container-First Approach**: Docker as primary deployment method
@@ -184,13 +207,15 @@ alembic revision --autogenerate -m "description"
 ## 🚧 Future Improvements
 
 ### High Priority
+
 - **Real Authentication System**: Replace dummy user with proper registration/login pages (user creation endpoint already exists, but full auth system implementation is deprioritized to focus on core chat functionality)
 - **Delete Conversation Feature**: Button and endpoint for removing unwanted conversations
 - **Stop Generation Button**: Allow users to terminate AI response generation mid-process
 - **Multi-media Support**: Enable image, audio, and video inputs (leveraging any-to-any model capabilities)
 
 ### Performance & Scalability
-- **Sliding Window + Running Summary**: 
+
+- **Sliding Window + Running Summary**:
   - Keep only last N messages verbatim (12-30 turns)
   - Maintain running summary of older content
   - Prevent performance issues with large conversations
@@ -200,21 +225,24 @@ alembic revision --autogenerate -m "description"
 - **Message Streaming**: Real-time response streaming instead of waiting for complete responses
 
 ### User Experience Enhancements
+
 - **Multiple Model Selection**: Add user interface to switch between different AI models (e.g., lightweight models for speed vs. larger models for quality) allowing users to choose the best model for their specific use case
 - **Responsive Design**: Optimize UI for different devices including desktop, tablets, and mobile phones with self-adjusting layouts and touch-friendly interfaces
 - **Message Layout Redesign**: Move away from left/right bubble layout to a more modern centered approach
 - **Turn down token Length Limits**: For local deployments, I limited the response length (can be configured in MAX_NEW_TOKENS in `server/config.js`) for faster response.
 - **Thinking Process Visualization**: Stream and display AI reasoning process
-- **Enhanced Error Recovery**: Better handling of network failures and errors. Use Toast to display user friendly error messages. 
+- **Enhanced Error Recovery**: Better handling of network failures and errors. Use Toast to display user friendly error messages.
 
 ### Code Quality & Testing
+
 - **Comprehensive Test Coverage**: Add more test cases
 - **Integration Tests**: Full API testing with FastAPI TestClient
 - **Unit Tests**: Isolated testing of core functions with mocking
-- **Code Refactoring**: Shorter, more focused functions following single responsibility principle
+- **Code Refactoring**: Break down large functions into smaller, focused units following the single responsibility principle. Currently, several functions handle multiple concerns and could be decomposed into specialized sub-functions for improved readability, maintainability, and testability.
 
 ### Architecture Evolution
-- **Service-Oriented Architecture**: 
+
+- **Service-Oriented Architecture**:
   - Independent AI service scaling
   - Better resource management
   - Service isolation for reliability

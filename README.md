@@ -66,7 +66,7 @@ npm run dev
 - **FastAPI** - High-performance Python web framework
 - **SQLAlchemy** - Database ORM with Alembic migrations
 - **MySQL** - Primary database
-- **Local AI Model** - Any-to-any model (currently text-to-text only)
+- **Local AI Model** - Qwen/Qwen3-0.6B (any-to-any model, currently text-to-text only). Chosen for its lower parameter count (0.6B) to enable easier local development and testing. Production deployments can scale up to larger parameter models for enhanced performance
 
 ### Infrastructure
 - **Docker & Docker Compose** - Containerized deployment
@@ -200,6 +200,7 @@ alembic revision --autogenerate -m "description"
 - **Message Streaming**: Real-time response streaming instead of waiting for complete responses
 
 ### User Experience Enhancements
+- **Multiple Model Selection**: Add user interface to switch between different AI models (e.g., lightweight models for speed vs. larger models for quality) allowing users to choose the best model for their specific use case
 - **Message Layout Redesign**: Move away from left/right bubble layout to a more modern centered approach
 - **Turn down token Length Limits**: For local deployments, I limited the response length (can be configured in MAX_NEW_TOKENS in `server/config.js`) for faster response.
 - **Thinking Process Visualization**: Stream and display AI reasoning process

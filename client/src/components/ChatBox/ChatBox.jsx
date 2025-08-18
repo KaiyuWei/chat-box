@@ -6,6 +6,8 @@ const ChatBox = ({
   selectedConversationId,
   onConversationChange,
   onConversationCreated,
+  isProcessing,
+  setIsProcessing,
 }) => {
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
@@ -237,6 +239,7 @@ const ChatBox = ({
     setMessages([...messages, userMessage]);
 
     setIsThinking(true);
+    setIsProcessing(true);
 
     try {
       const chatResponse = await sendChatRequest(messageText);
@@ -258,6 +261,7 @@ const ChatBox = ({
       // TODO: Add user-facing error handling (e.g., show error message in UI)
     } finally {
       setIsThinking(false);
+      setIsProcessing(false);
     }
   };
 
@@ -314,7 +318,7 @@ const ChatBox = ({
           </>
         )}
       </div>
-      <ReplyBox onSendMessage={handleSendMessage} />
+      <ReplyBox onSendMessage={handleSendMessage} isProcessing={isProcessing} />
     </div>
   );
 };

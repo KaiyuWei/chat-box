@@ -7,6 +7,7 @@ const ChatPage = () => {
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [refreshSidebar, setRefreshSidebar] = useState(0);
   const [tempConversation, setTempConversation] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleConversationSelect = (conversation) => {
     setSelectedConversationId(conversation.conversation_id);
@@ -41,17 +42,20 @@ const ChatPage = () => {
     <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
       <ChatTopBar />
       <div className="flex flex-1 overflow-hidden w-full">
-        <ChatSidebar
+                        <ChatSidebar 
           selectedConversationId={selectedConversationId}
           onConversationSelect={handleConversationSelect}
           onNewConversation={handleNewConversation}
           refreshTrigger={refreshSidebar}
           tempConversation={tempConversation}
+          isProcessing={isProcessing}
         />
         <ChatBox
           selectedConversationId={selectedConversationId}
           onConversationChange={setSelectedConversationId}
           onConversationCreated={handleConversationCreated}
+          isProcessing={isProcessing}
+          setIsProcessing={setIsProcessing}
         />
       </div>
     </div>

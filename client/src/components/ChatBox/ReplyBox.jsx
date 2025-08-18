@@ -3,18 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 
-const ReplyBox = ({ onSendMessage }) => {
+const ReplyBox = ({ onSendMessage, isProcessing = false }) => {
   const [inputValue, setInputValue] = useState("");
 
   const handleSendMessage = () => {
-    if (inputValue.trim()) {
+    if (inputValue.trim() && !isProcessing) {
       onSendMessage(inputValue);
       setInputValue("");
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !isProcessing) {
       handleSendMessage();
     }
   };
@@ -26,13 +26,15 @@ const ReplyBox = ({ onSendMessage }) => {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Type a message..."
+          placeholder={isProcessing ? "Processing..." : "Type a message..."}
           className="flex-1 bg-white border-gray-300"
+          disabled={isProcessing}
         />
         <Button
           onClick={handleSendMessage}
           size="icon"
           className="bg-blue-600 hover:bg-blue-700 text-white"
+          disabled={isProcessing}
         >
           <Send className="h-4 w-4" />
         </Button>

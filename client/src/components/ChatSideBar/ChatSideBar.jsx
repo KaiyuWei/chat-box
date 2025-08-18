@@ -9,6 +9,7 @@ const ChatSidebar = ({
   onNewConversation,
   refreshTrigger,
   tempConversation,
+  isProcessing,
 }) => {
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,8 +76,11 @@ const ChatSidebar = ({
         <IconButton
           variant="default"
           size="sm"
+          disabled={isProcessing}
           onClick={() => {
-            onNewConversation && onNewConversation();
+            if (!isProcessing) {
+              onNewConversation && onNewConversation();
+            }
           }}
         >
           <PlusIcon size={14} />
@@ -102,7 +106,8 @@ const ChatSidebar = ({
                 isActive={
                   tempConversation.conversation_id === selectedConversationId
                 }
-                onClick={onConversationSelect}
+                onClick={isProcessing ? null : onConversationSelect}
+                disabled={isProcessing}
               />
             )}
             {/* Show regular conversations */}
@@ -113,7 +118,8 @@ const ChatSidebar = ({
                 isActive={
                   conversation.conversation_id === selectedConversationId
                 }
-                onClick={onConversationSelect}
+                onClick={isProcessing ? null : onConversationSelect}
+                disabled={isProcessing}
               />
             ))}
           </div>

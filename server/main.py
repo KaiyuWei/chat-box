@@ -3,7 +3,8 @@ import logging
 from chat_model_loader import load_model_and_processor
 from config import settings
 from database import test_connection
-from routers import chat_model_router, user_router, conversation_router
+from routers import chat_model_router, conversation_router, user_router
+from utils.startup import ensure_dummy_user
 
 # config logging
 logging.basicConfig(
@@ -39,13 +40,16 @@ app.add_middleware(
 # check database connection
 @app.on_event("startup")
 async def startup_event():
-    """Test database connection and load model on startup"""
+    """Test database connection, ensure default user exists, and load model on startup"""
 
     if not test_connection():
         logger.error("Failed to connect to database. Exiting...")
         exit(1)
 
     logger.info("Database connection successful")
+
+    # Ensure default user exists for development and testing
+    ensure_dummy_user()
 
     logger.info("Loading chat model...")
     load_model_and_processor()

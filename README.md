@@ -194,7 +194,8 @@ alembic revision --autogenerate -m "description"
   - Maintain running summary of older content
   - Prevent performance issues with large conversations
 - **Lazy Loading**: Only load the newest n conversations and the newest n messages in a conversation. There should be "Load more..." pagination for conversations and messages
-- **Separate AI Service**: Move AI model to dedicated microservice for better scalability
+- **NoSQL Database Migration**: Migrate messages and conversations to MongoDB or similar NoSQL database for better performance with large-scale chat data (flexible schema for different message types, better horizontal scaling, optimized for document-based chat storage patterns)
+- **Separate AI Service + Queue System**: Move AI model to dedicated microservice with task queue (Redis/RabbitMQ) for async processing. Currently, the API service blocks during AI model processing, preventing other requests from being handled. A queue system would enable non-blocking request handling and better resource utilization
 - **Message Streaming**: Real-time response streaming instead of waiting for complete responses
 
 ### User Experience Enhancements

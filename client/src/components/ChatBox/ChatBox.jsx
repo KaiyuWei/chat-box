@@ -64,13 +64,25 @@ const ChatBox = ({
 
       setUserConversations(conversations);
 
-      // Load the latest conversation (last in array)
       if (conversations.length > 0) {
-        const latestConversation = conversations[conversations.length - 1];
-        loadConversationMessages(latestConversation);
+        let conversationToLoad = null;
 
-        onConversationChange &&
-          onConversationChange(latestConversation.conversation_id);
+        if (
+          selectedConversationId &&
+          typeof selectedConversationId === "number"
+        ) {
+          conversationToLoad = conversations.find(
+            (conv) => conv.conversation_id === selectedConversationId
+          );
+        }
+
+        if (!conversationToLoad) {
+          conversationToLoad = conversations[conversations.length - 1];
+          onConversationChange &&
+            onConversationChange(conversationToLoad.conversation_id);
+        }
+
+        loadConversationMessages(conversationToLoad);
       } else {
         setMessages([
           {

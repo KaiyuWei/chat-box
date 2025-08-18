@@ -1,10 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatBox from "@/components/ChatBox/ChatBox";
 import ChatSidebar from "@/components/ChatSideBar";
 import ChatTopBar from "@/components/ChatTopBar";
 
+const STORAGE_KEY = "selectedConversationId";
+
 const ChatPage = () => {
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
+  const [selectedConversationId, setSelectedConversationId] = useState(() => {
+    // Initialize from localStorage if available
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.warn("Failed to load conversation ID from localStorage:", error);
+      return null;
+    }
+  });
   const [refreshSidebar, setRefreshSidebar] = useState(0);
   const [tempConversation, setTempConversation] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -14,8 +25,6 @@ const ChatPage = () => {
   };
 
   const handleNewConversation = () => {
-    console.log("Creating new conversation");
-    // Create a temporary conversation ID and object for the new conversation
     const tempConversationId = `temp_${Date.now()}`;
     const newTempConversation = {
       conversation_id: tempConversationId,
@@ -29,20 +38,31 @@ const ChatPage = () => {
   };
 
   const handleConversationCreated = (newConversationId) => {
-    console.log("New conversation created with ID:", newConversationId);
-    // Clear the temporary conversation
     setTempConversation(null);
-    // Refresh the sidebar to show the new conversation
     setRefreshSidebar((prev) => prev + 1);
-    // Select the new conversation
     setSelectedConversationId(newConversationId);
   };
+
+  useEffect(() => {
+    try {
+      if (selectedConversationId !== null) {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(selectedConversationId)
+        );
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (error) {
+      console.warn("Failed to save conversation ID to localStorage:", error);
+    }
+  }, [selectedConversationId]);
 
   return (
     <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
       <ChatTopBar />
       <div className="flex flex-1 overflow-hidden w-full">
-                        <ChatSidebar 
+        <ChatSidebar
           selectedConversationId={selectedConversationId}
           onConversationSelect={handleConversationSelect}
           onNewConversation={handleNewConversation}

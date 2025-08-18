@@ -29,6 +29,8 @@ Use session users to enable storing chat history and continous chat.
 
 ## button and endpoint for deleting a conversation
 
+## load part of conversations and messages, use "load more..."
+
 ## length limitation of generated token for local deployment
 
 ## message bubbles layout: do not make them to the two sides.

@@ -1,6 +1,7 @@
 import ReplyBox from "./ReplyBox";
 import { useState, useEffect } from "react";
 import { conversationStorage } from "../../utils/conversationStorage";
+import ReactMarkdown from "react-markdown";
 
 const ChatBox = () => {
   const [messages, setMessages] = useState([
@@ -36,7 +37,7 @@ const ChatBox = () => {
 
   const createMessage = (text, isUser, id = null) => {
     return {
-      id: id || messages.length + (isUser ? 1 : 2),
+      id: id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       text,
       isUser,
       timestamp: new Date(),
@@ -151,12 +152,14 @@ const ChatBox = () => {
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.isUser
-                  ? "bg-message-user text-message-user-foreground"
-                  : "bg-message-other text-message-other-foreground"
+                  ? "bg-message-user text-message-user-foreground text-left"
+                  : "bg-message-other text-message-other-foreground text-left"
               }`}
             >
-              <p>{message.text}</p>
-              <span className="text-xs opacity-70 mt-1 block">
+              <div className="text-left prose prose-sm max-w-none">
+                <ReactMarkdown>{message.text}</ReactMarkdown>
+              </div>
+              <span className="text-xs opacity-70 mt-1 block text-left">
                 {message.timestamp.toLocaleTimeString()}
               </span>
             </div>

@@ -19,12 +19,7 @@ def get_conversation_from_request(
     prompt = chat_request.prompt if chat_request.prompt else ""
 
     if conversation_id is not None:
-        conversation = (
-            db.query(Conversation)
-            .options(joinedload(Conversation.messages))
-            .filter(Conversation.id == conversation_id)
-            .first()
-        )
+        conversation = Conversation.get_by_id(db, conversation_id, with_messages=True)
     else:
         conversation = Conversation.create_conversation(db, user_id, title, prompt)
 

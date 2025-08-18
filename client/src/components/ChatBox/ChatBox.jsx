@@ -268,11 +268,6 @@ const ChatBox = ({
   return (
     <div className="flex-1 flex flex-col bg-chat-background h-full w-full">
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 w-full">
-        {selectedConversationId && (
-          <div className="text-xs text-gray-500 text-center mb-2 bg-gray-100 p-2 rounded">
-            Active Conversation ID: {selectedConversationId}
-          </div>
-        )}
         {isLoading ? (
           <div className="flex justify-center items-center h-32">
             <div className="text-gray-500">Loading conversations...</div>
@@ -297,7 +292,7 @@ const ChatBox = ({
                     <ReactMarkdown>{message.text}</ReactMarkdown>
                   </div>
                   <span className="text-xs opacity-70 mt-1 block text-left">
-                    {message.timestamp.toLocaleTimeString()}
+                    {message.timestamp.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -309,9 +304,24 @@ const ChatBox = ({
                     <span className="italic text-gray-500 flex items-center">
                       I'm thinking about it
                       <span className="ml-1 flex">
-                        <span className="animate-bounce" style={{animationDelay: '0ms'}}>.</span>
-                        <span className="animate-bounce" style={{animationDelay: '150ms'}}>.</span>
-                        <span className="animate-bounce" style={{animationDelay: '300ms'}}>.</span>
+                        <span
+                          className="animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        >
+                          .
+                        </span>
+                        <span
+                          className="animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        >
+                          .
+                        </span>
+                        <span
+                          className="animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        >
+                          .
+                        </span>
                       </span>
                     </span>
                   </div>

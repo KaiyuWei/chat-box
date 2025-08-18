@@ -3,7 +3,7 @@ export const ERROR_MESSAGES = {
 
 Hey there, fellow developer! 👋 
 
-If this is your **first time starting up** the backend server, don't panic! The server is probably still:
+If you just started the backend server, expecially the **first time**, don't panic! The server is probably still:
 - ☕ Waking up from its digital slumber
 - 🧠 Loading that chunky LLM model (this is the slow part!)
 - 🔧 Getting all its AI neurons in order

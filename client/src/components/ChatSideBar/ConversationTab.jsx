@@ -1,15 +1,16 @@
 import { XIcon } from "../ui/icons";
 
-const ConversationTab = ({ 
-  conversation, 
-  onClick, 
-  onClose, 
-  isActive = false, 
+const ConversationTab = ({
+  conversation,
+  onClick,
+  onClose,
+  isActive = false,
   disabled = false,
-  showCloseButton = false 
+  showCloseButton = false,
 }) => {
-  const isTemporary = typeof conversation.conversation_id === 'string' && 
-                     conversation.conversation_id.startsWith('temp_');
+  const isTemporary =
+    typeof conversation.conversation_id === "string" &&
+    conversation.conversation_id.startsWith("temp_");
 
   const handleCloseClick = (e) => {
     e.stopPropagation(); // Prevent triggering the main onClick
@@ -20,8 +21,8 @@ const ConversationTab = ({
     <div
       onClick={() => !disabled && onClick && onClick(conversation)}
       className={`w-full p-3 border rounded-lg shadow-sm transition-shadow ${
-        disabled 
-          ? "cursor-not-allowed opacity-50" 
+        disabled
+          ? "cursor-not-allowed opacity-50"
           : "cursor-pointer hover:shadow-md"
       } ${
         isActive
@@ -30,7 +31,9 @@ const ConversationTab = ({
       }`}
     >
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium truncate flex-1">{conversation.title}</div>
+        <div className="text-sm font-medium truncate flex-1">
+          {conversation.title}
+        </div>
         {(showCloseButton || isTemporary) && (
           <button
             onClick={handleCloseClick}

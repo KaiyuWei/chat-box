@@ -48,6 +48,7 @@ const ChatSidebar = ({
 
       const userConversations = await response.json();
 
+      // IMPROVE: sort the array by timestamp descending order. We should not assume the conversations are sorted by timestamp.
       const sortedConversations = [...userConversations].reverse();
       setConversations(sortedConversations);
     } catch (error) {
@@ -118,7 +119,9 @@ const ChatSidebar = ({
                 isActive={
                   conversation.conversation_id === selectedConversationId
                 }
-                onClick={isProcessing || tempConversation ? null : onConversationSelect}
+                onClick={
+                  isProcessing || tempConversation ? null : onConversationSelect
+                }
                 disabled={isProcessing || !!tempConversation}
               />
             ))}

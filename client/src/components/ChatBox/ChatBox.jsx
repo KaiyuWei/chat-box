@@ -1,7 +1,7 @@
 import ReplyBox from "./ReplyBox";
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { ERROR_MESSAGES } from "../../utils/errorMessages";
+import { CONST_MESSAGES } from "../../utils/constMessages";
 
 const ChatBox = ({
   selectedConversationId,
@@ -51,10 +51,13 @@ const ChatBox = ({
           setUserConversations([]);
           // Notify parent that user has no conversations (should clear localStorage)
           onNoConversationsFound && onNoConversationsFound();
+          // IMPROVE: The above line creates a new conversation with initial message when user has no conversations.
+          // but the following line creates a new message to be rendered, instead of reading the initial message from the current conversation.
+          // this may cause an unsynchronized state between the conversation and the renderedmessages.
           setMessages([
             {
               id: "welcome",
-              text: ERROR_MESSAGES.WELCOME,
+              text: CONST_MESSAGES.WELCOME,
               isUser: false,
               timestamp: new Date(),
             },
@@ -92,7 +95,7 @@ const ChatBox = ({
         setMessages([
           {
             id: "welcome",
-            text: ERROR_MESSAGES.WELCOME,
+            text: CONST_MESSAGES.WELCOME,
             isUser: false,
             timestamp: new Date(),
           },
@@ -104,7 +107,7 @@ const ChatBox = ({
       setMessages([
         {
           id: "error",
-          text: ERROR_MESSAGES.SERVER_LOADING,
+          text: CONST_MESSAGES.SERVER_LOADING,
           isUser: false,
           timestamp: new Date(),
         },
@@ -140,7 +143,7 @@ const ChatBox = ({
         setMessages([
           {
             id: "welcome",
-            text: ERROR_MESSAGES.WELCOME,
+            text: CONST_MESSAGES.WELCOME,
             isUser: false,
             timestamp: new Date(),
           },

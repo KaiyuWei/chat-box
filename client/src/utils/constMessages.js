@@ -1,4 +1,4 @@
-export const ERROR_MESSAGES = {
+export const CONST_MESSAGES = {
   SERVER_LOADING: `🤖 **Oops! Backend Server is Having a Moment** 
 
 Hey there, fellow developer! 👋 

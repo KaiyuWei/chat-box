@@ -49,6 +49,7 @@ const ChatPage = () => {
     try {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
       const userId = 1; // TODO: replace with actual user ID when auth system is added
+      // IMPROVE: We can store necessary conversation data of current user in localStorage so that we don't need to fetch them from the server every time.
       const response = await fetch(
         `${apiBaseUrl}/api/user-conv-with-msg/${userId}`
       );
